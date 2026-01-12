@@ -1,50 +1,91 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+SYNC IMPACT REPORT
+==================
+Version change: [UNINITIALIZED] → 1.0.0 (initial ratification)
+List of modified principles: N/A (initial creation)
+Added sections:
+  - Core Principles (5 principles)
+  - Security Requirements
+  - Development Workflow
+  - Governance
+Removed sections: N/A
+Templates requiring updates:
+  - ✅ .specify/templates/plan-template.md (reviewed - no changes needed)
+  - ✅ .specify/templates/spec-template.md (reviewed - no changes needed)
+  - ✅ .specify/templates/tasks-template.md (reviewed - no changes needed)
+  - ✅ .specify/templates/agent-file-template.md (reviewed - no changes needed)
+  - ✅ .specify/templates/checklist-template.md (reviewed - no changes needed)
+Follow-up TODOs: None
+-->
+
+# ogsql Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Grammar-First Development
+The ANTLR grammar files (*.g4) define the authoritative contract for SQL parsing. All grammar changes MUST be versioned and reviewed. Grammar rules MUST be unambiguous and deterministic. No parser implementation may deviate from defined grammar without explicit amendment.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+**Rationale**: The grammar is the single source of truth for what SQL syntax is supported. Implementation bugs must be fixed to match grammar, not the reverse.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Test-Driven Development
+All parser components MUST have corresponding tests written before implementation. Tests MUST cover valid syntax, invalid syntax, edge cases, and error conditions. Red-Green-Refactor cycle MUST be strictly enforced. Grammar changes MUST include test coverage for all affected rules.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Rationale**: SQL parsing correctness is non-negotiable. TDD ensures every grammar rule and parser logic has test coverage preventing regressions.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. OpenGauss Compatibility
+The parser MUST accurately support OpenGauss SQL dialect features as defined by official documentation. Deviations from OpenGauss behavior MUST be explicitly documented with justification. Priority is given to OpenGauss-specific syntax over generic SQL where they differ.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Rationale**: The project's purpose is OpenGauss SQL parsing. Generic SQL support is valuable but secondary to OpenGauss-specific behavior.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. API Clarity & Consistency
+Parser API methods MUST follow Java naming conventions. Error messages MUST be clear and actionable, indicating the exact syntax error and location. The AST (Abstract Syntax Tree) structure MUST be well-documented and stable across patch versions. Public API changes require MINOR or MAJOR version bump.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**Rationale**: Users need predictable, clear interfaces to integrate the parser into their applications.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Extensibility & Modularity
+The grammar and parser structure MUST be designed to easily accommodate new OpenGauss SQL features. New SQL constructs MUST be added without requiring wholesale grammar restructuring. Parser components SHOULD be independently testable and maintainable.
+
+**Rationale**: OpenGauss continues to evolve. The architecture must support incremental additions without technical debt accumulation.
+
+## Security Requirements
+
+### Input Validation
+All SQL input MUST be parsed within reasonable memory and time limits. The parser MUST prevent denial-of-service attacks via pathological SQL constructs (e.g., excessively deep nesting, recursion limits). Input size limits MUST be enforced and configurable.
+
+### Error Handling
+Parser errors MUST NOT expose internal implementation details or stack traces to callers. Error messages MUST be sanitized to prevent information leakage. Exception handling MUST follow Spring Boot conventions.
+
+### Dependency Management
+All dependencies MUST be regularly updated for security patches. Vulnerability scanning MUST be part of the CI/CD pipeline. No dependencies with known CVEs above severity threshold are permitted in releases.
+
+## Development Workflow
+
+### Code Review Standards
+All grammar changes MUST be reviewed by at least one maintainer. All public API changes require explicit approval. Reviewers MUST verify test coverage meets standards. Reviewers MUST validate compliance with all Core Principles.
+
+### Testing Gates
+Grammar changes MUST pass all existing tests. New grammar features MUST include integration tests demonstrating usage. Parser MUST handle all test cases from the OpenGauss test suite (if available). Code coverage threshold for parser components is 90%.
+
+### Documentation Requirements
+Public API changes MUST be documented in Javadoc. Grammar rules MUST include comments explaining purpose and syntax. Breaking changes MUST be documented in CHANGELOG.md. New OpenGauss SQL features MUST include examples in documentation.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+The Constitution supersedes all other development practices. Conflicts between this Constitution and other guidelines MUST be resolved in favor of the Constitution.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+### Amendment Procedure
+1. Proposed amendments MUST be documented with rationale and impact analysis
+2. Amendments MUST be reviewed and approved by project maintainers
+3. Amendments MUST include a migration plan for existing code if backward-incompatible
+4. Amendment commits MUST reference the Constitution version being changed
+
+### Versioning Policy
+Constitution versions follow semantic versioning (MAJOR.MINOR.PATCH):
+- MAJOR: Removal or redefinition of principles, backward-incompatible governance changes
+- MINOR: New principle or section added, materially expanded guidance
+- PATCH: Clarifications, wording improvements, non-semantic refinements
+
+### Compliance Review
+All pull requests MUST verify compliance with Constitution principles. Violations MUST be explicitly justified in the PR description. Complexity or deviations from principles MUST be documented and approved. Use `.specify/templates/plan-template.md` Constitution Check section for feature-level validation.
+
+**Version**: 1.0.0 | **Ratified**: 2026-01-12 | **Last Amended**: 2026-01-12
