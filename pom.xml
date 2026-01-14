@@ -40,6 +40,12 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>antlr4-runtime</artifactId>
+			<version>4.13.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -52,6 +58,16 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-maven-plugin</artifactId>
             <version>4.13.1</version>
+            <configuration>
+                 <sourceDirectory>${project.basedir}/src/main/java/com/sdchat/ogsql/grammar</sourceDirectory>
+                 <outputDirectory>${project.build.directory}/generated-sources/antlr4/com/sdchat/ogsql/grammar</outputDirectory>
+                 <includes>
+                     <include>OpenGaussSQL.g4</include>
+                 </includes>
+                 <visitor>true</visitor>
+                 <listener>true</listener>
+                 <language>English</language>
+             </configuration>
             <executions>
                 <execution>
                     <goals><goal>antlr4</goal></goals>

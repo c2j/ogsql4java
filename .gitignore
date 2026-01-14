@@ -14,6 +14,10 @@
 hs_err_pid*
 replay_pid*
 
+### ANTLR4 ###
+*.tokens
+*.interp
+
 ### Maven ###
 target/
 pom.xml.tag
@@ -72,6 +76,9 @@ yarn-error.log*
 ### Local Config ###
 application-local.properties
 application-local.yml
+.env*
+.env.local
+.env.*.local
 
 sql_samples/
 test_files/

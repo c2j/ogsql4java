@@ -1,0 +1,50 @@
+[ERROR] Tests run: 4, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.166 s <<< FAILURE! -- in com.sdchat.ogsql.contract.InvalidHintTest
+[ERROR] com.sdchat.ogsql.contract.InvalidHintTest.testParseSelectWithInvalidHintType -- Time elapsed: 0.131 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected com.sdchat.ogsql.exception.ParseException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3128)
+	at com.sdchat.ogsql.contract.InvalidHintTest.testParseSelectWithInvalidHintType(InvalidHintTest.java:18)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.sdchat.ogsql.contract.InvalidHintTest.testParseSelectWithHintInvalidTableList -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected com.sdchat.ogsql.exception.ParseException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3128)
+	at com.sdchat.ogsql.contract.InvalidHintTest.testParseSelectWithHintInvalidTableList(InvalidHintTest.java:42)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.sdchat.ogsql.contract.InvalidHintTest.testParseSelectWithHintMissingClosingParen -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected com.sdchat.ogsql.exception.ParseException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3128)
+	at com.sdchat.ogsql.contract.InvalidHintTest.testParseSelectWithHintMissingClosingParen(InvalidHintTest.java:34)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] Failures: 
+[ERROR]   InvalidHintTest.testParseSelectWithHintInvalidTableList:42 Expected com.sdchat.ogsql.exception.ParseException to be thrown, but nothing was thrown.
+[ERROR]   InvalidHintTest.testParseSelectWithHintMissingClosingParen:34 Expected com.sdchat.ogsql.exception.ParseException to be thrown, but nothing was thrown.
+[ERROR]   InvalidHintTest.testParseSelectWithInvalidHintType:18 Expected com.sdchat.ogsql.exception.ParseException to be thrown, but nothing was thrown.
+[ERROR] Tests run: 17, Failures: 3, Errors: 0, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.4:test (default-test) on project ogsql: There are test failures.
+[ERROR] 
+[ERROR] See /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
