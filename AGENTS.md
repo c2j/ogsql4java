@@ -5,6 +5,8 @@ Auto-generated from all feature plans. Last updated: 2026-01-12
 ## Active Technologies
 - Markdown documentation (examples use Java 17) + OpenGauss SQL Parser library (com.sdchat.ogsql) (001-api-user-guide)
 - Markdown files in documentation directory (001-api-user-guide)
+- Java 17 + ANTLR4 4.13.1, Spring Boot 3.5.9, JUnit 5 (for testing) (003-gauss-procedure-parsing)
+- N/A (parser library, no persistence) (003-gauss-procedure-parsing)
 
 - Java 17
 - Spring Boot 3.5.9
@@ -104,6 +106,7 @@ mvn clean package
 - Package structure: `com.sdchat.ogsql.{package}`
 
 ## Recent Changes
+- 003-gauss-procedure-parsing: Added Java 17 + ANTLR4 4.13.1, Spring Boot 3.5.9, JUnit 5 (for testing)
 - 001-api-user-guide: Added Markdown documentation (examples use Java 17) + OpenGauss SQL Parser library (com.sdchat.ogsql)
 
 <!-- MANUAL ADDITIONS START -->
