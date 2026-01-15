@@ -103,7 +103,8 @@ joinCondition
     ;
 
 optalias
-    : IDENTIFIER
+    : AS IDENTIFIER
+    | IDENTIFIER
     |
     ;
 

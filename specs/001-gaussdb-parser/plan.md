@@ -87,7 +87,7 @@ src/main/java/com/sdchat/ogsql/
 ├── ast/                 # Abstract Syntax Tree nodes
 │   ├── SQLStatement.java        # Base statement interface
 │   ├── SelectQuery.java         # SELECT query representation
-│   ├── TableDefinition.java     # CREATE TABLE representation
+│   ├── CreateStatement.java      # CREATE TABLE representation
 │   ├── PerformanceHint.java     # Query hint representation
 │   ├── PartitioningInformation.java  # Partition definition
 │   ├── ExternalTable.java       # Foreign table representation
@@ -101,7 +101,7 @@ src/main/java/com/sdchat/ogsql/
 │   └── QueryAnalyzer.java       # Analyze query patterns
 └── exception/          # Parser exceptions
     ├── ParseException.java       # Base parsing exception
-    └── SyntaxErrorException.java  # Syntax error with location
+    └── ParsingError.java         # Error information
 
 src/test/java/com/sdchat/ogsql/
 ├── contract/            # Contract tests (grammar compliance)

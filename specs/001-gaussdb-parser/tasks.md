@@ -171,27 +171,42 @@ description: "Task list for feature implementation"
 - [X] T080 [P] [US1] Write unit test for CREATE TABLE grammar rules in tests/unit/grammar/CreateTableGrammarTest.java
 - [X] T081 [P] [US1] Write unit test for expression grammar rules in tests/unit/grammar/ExpressionGrammarTest.java
 
-#### Parser Implementation for Basic SQL
-
-- [X] T082 [US1] Implement parse() method in SQLParser.java for single statement
-- [X] T083 [US1] Implement parseMultiple() method in SQLParser.java for multiple statements
-- [X] T084 [US1] Implement error handling in SQLParser.java with line/column information
-- [X] T085 [US1] Implement statement type detection in SQLParser.java
-- [X] T086 [US1] Implement ANTLR4 AST visitor to build custom AST in src/main/java/com/sdchat/ogsql/parser/ASTBuilder.java
-- [X] T087 [US1] Wire ASTBuilder into SQLParser parse() methods
-
-#### Test Parser Implementation T082-T087
-- [X] T082 [US1] Implement parse() method in SQLParser.java for single statement
-- [X] T083 [US1] Implement parseMultiple() method in SQLParser.java for multiple statements
-- [X] T084 [US1] Implement error handling in SQLParser.java with line/column information
-- [X] T085 [US1] Implement statement type detection in SQLParser.java
-- [X] T086 [US1] Implement ANTLR4 AST visitor to build custom AST in src/main/java/com/sdchat/ogsql/parser/ASTBuilder.java
-- [X] T087 [US1] Wire ASTBuilder into SQLParser parse() methods
-
-#### Test Parser Implementation T088-T090
+#### Test Parser Implementation (TDD: Tests BEFORE Implementation)
 - [X] T088 [P] [US1] Write integration test for parse() method in tests/integration/ParseMethodTest.java
 - [X] T089 [P] [US1] Write integration test for parseMultiple() method in tests/integration/MultipleParseTest.java
 - [X] T090 [P] [US1] Write integration test for error handling in tests/integration/ErrorHandlingTest.java
+
+#### Parser Implementation for Basic SQL
+
+- [X] T091 [US1] Implement parse() method in SQLParser.java for single statement
+- [X] T092 [US1] Implement parseMultiple() method in SQLParser.java for multiple statements
+- [X] T093 [US1] Implement error handling in SQLParser.java with line/column information
+- [X] T094 [US1] Implement statement type detection in SQLParser.java
+- [X] T095 [US1] Implement ANTLR4 AST visitor to build custom AST in src/main/java/com/sdchat/ogsql/parser/ASTBuilder.java
+- [X] T096 [US1] Wire ASTBuilder into SQLParser parse() methods
+
+#### Visitor Implementation for Basic SQL
+
+- [X] T097 [US1] Implement visit(SelectQuery) in ASTBuilder.java
+- [X] T098 [US1] Implement visit(CreateStatement) in ASTBuilder.java
+- [X] T099 [US1] Implement visit(InsertStatement) in ASTBuilder.java
+- [X] T100 [US1] Implement visit(UpdateStatement) in ASTBuilder.java
+- [X] T101 [US1] Implement visit(DeleteStatement) in ASTBuilder.java
+- [X] T102 [US1] Implement visit(DropStatement) in ASTBuilder.java
+
+#### Test Visitor Implementation T097-T102
+- [X] T103 [P] [US1] Write unit test for ASTBuilder visitor in tests/unit/parser/ASTBuilderTest.java
+
+#### Error Handling for Basic SQL
+
+- [X] T104 [US1] Add error context extraction (50 chars around error) in SyntaxErrorException
+- [X] T105 [US1] Add error suggestions (e.g., "Did you mean FROM?") in SyntaxErrorException
+- [X] T106 [US1] Configure default error strategy in SQLParser for development
+- [X] T107 [US1] Configure bail error strategy in SQLParser for production
+
+#### Test Error Handling T104-T107
+- [X] T108 [P] [US1] Write integration test for error messages in tests/integration/ErrorMessageTest.java
+- [X] T109 [P] [US1] Write integration test for error strategies in tests/integration/ErrorStrategyTest.java
 
 #### Visitor Implementation for Basic SQL
 
@@ -220,6 +235,57 @@ description: "Task list for feature implementation"
 
 ---
 
+## Phase 3b: Common Table Expressions (CTE) Support
+
+**Goal**: Parse Common Table Expressions (WITH clauses) in SELECT statements as required by FR-010.
+
+**Independent Test**: Parse SELECT statements with CTEs and verify AST contains CTE definitions and references.
+
+### Tests for CTE Support ⚠️ (REQUIRED by Constitution)
+
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+
+- [ ] TCTE-01 [P] [US1b] Write contract test for single CTE in WITH clause in tests/contract/SingleCTETest.java
+- [ ] TCTE-02 [P] [US1b] Write contract test for multiple CTEs in WITH clause in tests/contract/MultipleCTETest.java
+- [ ] TCTE-03 [P] [US1b] Write contract test for CTE referencing other CTE in tests/contract/CTEChainTest.java
+- [ ] TCTE-04 [P] [US1b] Write contract test for CTE in subquery in tests/contract/CTESubqueryTest.java
+- [ ] TCTE-05 [P] [US1b] Write integration test for CTE parsing in tests/integration/CTEIntegrationTest.java
+
+### Implementation for CTE Support
+
+#### AST Entity for CTEs
+
+- [ ] TCTE-06 [P] [US1b] Create CommonTableExpression class in src/main/java/com/sdchat/ogsql/ast/CommonTableExpression.java
+- [ ] TCTE-07 [P] [US1b] Update SelectQuery AST to include CTEs list
+
+#### Test TCTE-06-TCTE-07
+
+- [ ] TCTE-08 [P] [US1b] Write unit test for CommonTableExpression in tests/unit/ast/CommonTableExpressionTest.java
+- [ ] TCTE-09 [P] [US1b] Write unit test for SelectQuery CTEs in tests/unit/ast/SelectQueryCTETest.java
+
+#### Grammar Rules for CTEs
+
+- [ ] TCTE-10 [US1b] Add WITH clause grammar rules to OpenGaussSQL.g4
+- [ ] TCTE-11 [US1b] Add CTE definition rules (cte_name AS subquery) to OpenGaussSQL.g4
+- [ ] TCTE-12 [US1b] Update selectStmt to accept optional WITH clause
+
+#### Test Grammar Rules TCTE-10-TCTE-12
+
+- [ ] TCTE-13 [P] [US1b] Write unit test for CTE grammar rules in tests/unit/grammar/CTEGrammarTest.java
+
+#### Parser Implementation for CTEs
+
+- [ ] TCTE-14 [US1b] Update ASTBuilder to extract CTE information
+- [ ] TCTE-15 [US1b] Implement visit(CommonTableExpression) in ASTBuilder.java
+
+#### Test CTE Parser Implementation TCTE-14-TCTE-15
+
+- [ ] TCTE-16 [P] [US1b] Write integration test for CTE extraction in tests/integration/CTEExtractionTest.java
+
+**Checkpoint**: CTE support complete - can parse WITH clauses and CTE references
+
+---
+
 ## Phase 4: User Story 2 - Parse OpenGauss-Specific Hints (Priority: P2)
 
 **Goal**: Parse OpenGauss query optimizer hints (NestLoop, MergeJoin, HashJoin) embedded in SQL comments.
@@ -230,41 +296,41 @@ description: "Task list for feature implementation"
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [X] T104 [P] [US2] Write contract test for hint parsing with single hint in tests/contract/HintParseTest.java
-- [X] T105 [P] [US2] Write contract test for multiple hints in single comment in tests/contract/MultipleHintsTest.java
-- [X] T106 [P] [US2] Write contract test for query without hints in tests/contract/NoHintsTest.java
-- [X] T107 [P] [US2] Write contract test for invalid hint syntax in tests/contract/InvalidHintTest.java
-- [X] T108 [P] [US2] Write integration test for hints with SELECT queries in tests/integration/HintIntegrationTest.java
+- [X] T110 [P] [US2] Write contract test for hint parsing with single hint in tests/contract/HintParseTest.java
+- [X] T111 [P] [US2] Write contract test for multiple hints in single comment in tests/contract/MultipleHintsTest.java
+- [X] T112 [P] [US2] Write contract test for query without hints in tests/contract/NoHintsTest.java
+- [X] T113 [P] [US2] Write contract test for invalid hint syntax in tests/contract/InvalidHintTest.java
+- [X] T114 [P] [US2] Write integration test for hints with SELECT queries in tests/integration/HintIntegrationTest.java
 
 ### Implementation for User Story 2
 
 #### AST Entity for Hints
 
-- [X] T109 [P] [US2] Create PerformanceHint class in src/main/java/com/sdchat/ogsql/ast/PerformanceHint.java
+- [X] T115 [P] [US2] Create PerformanceHint class in src/main/java/com/sdchat/ogsql/ast/PerformanceHint.java
 
-#### Test T109
+#### Test T115
 
-- [X] T110 [P] [US2] Write unit test for PerformanceHint in tests/unit/ast/PerformanceHintTest.java
+- [X] T116 [P] [US2] Write unit test for PerformanceHint in tests/unit/ast/PerformanceHintTest.java
 
 #### Grammar Rules for Hints
 
-- [X] T111 [US2] Add hint block grammar rules to OpenGaussSQL.g4 (hintBlock: '/*+' hintList '*/')
-- [X] T112 [US2] Add hint type rules to OpenGaussSQL.g4 (NestLoop, MergeJoin, HashJoin, HashAggregate, BitmapScan, IndexScan)
-- [X] T113 [US2] Add hint table reference rules to OpenGaussSQL.g4
-- [X] T114 [US2] Add hint parameter rules to OpenGaussSQL.g4
+- [X] T117 [US2] Add hint block grammar rules to OpenGaussSQL.g4 (hintBlock: '/*+' hintList '*/')
+- [X] T118 [US2] Add hint type rules to OpenGaussSQL.g4 (NestLoop, MergeJoin, HashJoin, HashAggregate, BitmapScan, IndexScan)
+- [X] T119 [US2] Add hint table reference rules to OpenGaussSQL.g4
+- [X] T120 [US2] Add hint parameter rules to OpenGaussSQL.g4
 
-#### Test Grammar Rules T111-T114
+#### Test Grammar Rules T117-T120
 
-- [X] T115 [P] [US2] Write unit test for hint grammar rules in tests/unit/grammar/HintGrammarTest.java
+- [X] T121 [P] [US2] Write unit test for hint grammar rules in tests/unit/grammar/HintGrammarTest.java
 
 #### Parser Implementation for Hints
 
-- [X] T116 [US2] Update ASTBuilder to extract hints from ANTLR4 parse tree
-- [X] T117 [US2] Update SelectQuery AST to include hints list
+- [X] T122 [US2] Update ASTBuilder to extract hints from ANTLR4 parse tree
+- [X] T123 [US2] Update SelectQuery AST to include hints list
 
-#### Test Hint Parser Implementation T116-T117
+#### Test Hint Parser Implementation T122-T123
 
-- [X] T118 [P] [US2] Write integration test for hint extraction in tests/integration/HintExtractionTest.java
+- [X] T124 [P] [US2] Write integration test for hint extraction in tests/integration/HintExtractionTest.java
 
 **Checkpoint**: User Story 2 complete - can parse OpenGauss hints
 
@@ -280,36 +346,38 @@ description: "Task list for feature implementation"
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [X] T119 [P] [US3] Write contract test for RANGE partitioning in tests/contract/RangePartitionTest.java
-- [X] T120 [P] [US3] Write contract test for LIST partitioning in tests/contract/ListPartitionTest.java
-- [X] T121 [P] [US3] Write contract test for HASH partitioning in tests/contract/HashPartitionTest.java
-- [X] T123 [P] [US3] Write integration test for partitioned table parsing in tests/integration/PartitionIntegrationTest.java
+- [X] T125 [P] [US3] Write contract test for RANGE partitioning in tests/contract/RangePartitionTest.java
+- [X] T126 [P] [US3] Write contract test for LIST partitioning in tests/contract/ListPartitionTest.java
+- [X] T127 [P] [US3] Write contract test for HASH partitioning in tests/contract/HashPartitionTest.java
+- [X] T128 [P] [US3] Write integration test for partitioned table parsing in tests/integration/PartitionIntegrationTest.java
 
 ### Implementation for User Story 3
 
 #### AST Entities for Partitioning
 
-- [X] T124 [P] [US3] Create PartitioningInformation class in src/main/java/com/sdchat/ogsql/ast/PartitioningInformation.java
-- [X] T125 [P] [US3] Create PartitionDefinition class in src/main/java/com/sdchat/ogsql/ast/PartitionDefinition.java
-- [X] T126 [P] [US3] Create PartitionType enum (RANGE, LIST, HASH) in src/main/java/com/sdchat/ogsql/ast/PartitionType.java
-- [X] T127 [P] [US3] Write unit test for PartitioningInformation in tests/unit/ast/PartitioningInformationTest.java
-- [X] T128 [P] [US3] Write unit test for PartitionDefinition in tests/unit/ast/PartitionDefinitionTest.java
-- [X] T129 [P] [US3] Write unit test for PartitionType enum in tests/unit/ast/PartitionTypeTest.java
+- [X] T129 [P] [US3] Create PartitioningInformation class in src/main/java/com/sdchat/ogsql/ast/PartitioningInformation.java
+- [X] T130 [P] [US3] Create PartitionDefinition class in src/main/java/com/sdchat/ogsql/ast/PartitionDefinition.java
+- [X] T131 [P] [US3] Create PartitionType enum (RANGE, LIST, HASH) in src/main/java/com/sdchat/ogsql/ast/PartitionType.java
+- [X] T132 [P] [US3] Write unit test for PartitioningInformation in tests/unit/ast/PartitioningInformationTest.java
+- [X] T133 [P] [US3] Write unit test for PartitionDefinition in tests/unit/ast/PartitionDefinitionTest.java
+- [X] T134 [P] [US3] Write unit test for PartitionType enum in tests/unit/ast/PartitionTypeTest.java
 
 #### Grammar Rules for Partitioning
 
-- [X] T130 [US3] Add PARTITION BY clause rules to OpenGaussSQL.g4
-- [X] T131 [US3] Add partition type rules (RANGE, LIST, HASH) to OpenGaussSQL.g4
-- [X] T132 [US3] Add partition definition rules (PARTITION name VALUES) to OpenGaussSQL.g4
-- [ ] T133 [US3] Add subpartitioning support rules to OpenGaussSQL.g4
+- [X] T135 [US3] Add PARTITION BY clause rules to OpenGaussSQL.g4
+- [X] T136 [US3] Add partition type rules (RANGE, LIST, HASH) to OpenGaussSQL.g4
+- [X] T137 [US3] Add partition definition rules (PARTITION name VALUES) to OpenGaussSQL.g4
+- [X] T138 [US3] Add subpartitioning support rules to OpenGaussSQL.g4 (SUBPARTITION BY clause, subpartition definitions)
+- [X] T139 [US3] Add unit test for subpartitioning grammar in src/test/java/com/sdchat/ogsql/unit/grammar/SubpartitionGrammarTest.java
 
-#### Test Grammar Rules T130-T133
-- [X] T134 [P] [US3] Write unit test for partitioning grammar rules in tests/unit/grammar/PartitionGrammarTest.java
-- [X] T135 [US3] Update ASTBuilder to extract partitioning information
-- [X] T136 [US3] Update CreateStatement AST to include partitioning field
-- [X] T137 [US3] Implement partition key validation in ASTBuilder
-- [X] T138 [P] [US3] Write integration test for partitioning extraction in tests/integration/PartitionExtractionTest.java
-- [X] T139 [P] [US3] Write integration test for partition key validation in tests/integration/PartitionValidationTest.java
+#### Test Grammar Rules T135-T138
+
+- [X] T140 [P] [US3] Write unit test for partitioning grammar rules in tests/unit/grammar/PartitionGrammarTest.java
+- [X] T141 [US3] Update ASTBuilder to extract partitioning information
+- [X] T142 [US3] Update CreateStatement AST to include partitioning field
+- [X] T143 [US3] Implement partition key validation in ASTBuilder
+- [X] T144 [P] [US3] Write integration test for partitioning extraction in tests/integration/PartitionExtractionTest.java
+- [X] T145 [P] [US3] Write integration test for partition key validation in tests/integration/PartitionValidationTest.java
 
 **Checkpoint**: User Story 3 complete - can parse partitioned tables
 
@@ -325,54 +393,59 @@ description: "Task list for feature implementation"
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T140 [P] [US4] Write contract test for CREATE FOREIGN TABLE in tests/contract/ForeignTableTest.java
-- [ ] T141 [P] [US4] Write contract test for ALTER FOREIGN TABLE in tests/contract/AlterForeignTableTest.java
-- [ ] T142 [P] [US4] Write contract test for foreign table with column options in tests/contract/ForeignTableColumnTest.java
-- [ ] T143 [P] [US4] Write integration test for foreign table parsing in tests/integration/ForeignTableIntegrationTest.java
+- [ ] T146 [P] [US4] Write contract test for CREATE FOREIGN TABLE in tests/contract/ForeignTableTest.java
+- [ ] T147 [P] [US4] Write contract test for ALTER FOREIGN TABLE in tests/contract/AlterForeignTableTest.java
+- [ ] T148 [P] [US4] Write contract test for foreign table with column options in tests/contract/ForeignTableColumnTest.java
+- [ ] T149 [P] [US4] Write integration test for foreign table parsing in tests/integration/ForeignTableIntegrationTest.java
 
 ### Implementation for User Story 4
 
 #### AST Entity for Foreign Tables
 
-- [ ] T144 [P] [US4] Create ExternalTable class in src/main/java/com/sdchat/ogsql/ast/ExternalTable.java
+- [ ] T150 [P] [US4] Create ExternalTable class in src/main/java/com/sdchat/ogsql/ast/ExternalTable.java
 
-#### Test T144
-- [ ] T145 [P] [US4] Write unit test for ExternalTable in tests/unit/ast/ExternalTableTest.java
+#### Test T150
+
+- [ ] T151 [P] [US4] Write unit test for ExternalTable in tests/unit/ast/ExternalTableTest.java
 
 #### Grammar Rules for Foreign Tables
 
-- [X] T146 [US4] Add CREATE FOREIGN TABLE grammar rules to OpenGaussSQL.g4
-- [X] T147 [US4] Add SERVER clause rules to OpenGaussSQL.g4
-- [X] T148 [US4] Add OPTIONS clause rules to OpenGaussSQL.g4
-- [X] T149 [US4] Add ALTER FOREIGN TABLE grammar rules to OpenGaussSQL.g4
+- [X] T152 [US4] Add CREATE FOREIGN TABLE grammar rules to OpenGaussSQL.g4
+- [X] T153 [US4] Add SERVER clause rules to OpenGaussSQL.g4
+- [X] T154 [US4] Add OPTIONS clause rules to OpenGaussSQL.g4
+- [X] T155 [US4] Add ALTER FOREIGN TABLE grammar rules to OpenGaussSQL.g4
 
-#### Test Grammar Rules T146-T149
-- [X] T150 [P] [US4] Write unit test for foreign table grammar rules in tests/unit/grammar/ForeignTableGrammarTest.java
+#### Test Grammar Rules T152-T155
+
+- [X] T156 [P] [US4] Write unit test for foreign table grammar rules in tests/unit/grammar/ForeignTableGrammarTest.java
 
 #### Parser Implementation for Foreign Tables
 
-- [X] T151 [US4] Update ASTBuilder to extract foreign table information
-- [X] T152 [US4] Update CreateStatement AST to support external table type
-- [X] T153 [US4] Implement server options parsing in ASTBuilder
+- [X] T157 [US4] Update ASTBuilder to extract foreign table information
+- [X] T158 [US4] Update CreateStatement AST to support external table type
+- [X] T159 [US4] Implement server options parsing in ASTBuilder
 
-#### Test Foreign Table Parser Implementation T151-T153
-- [X] T154 [P] [US4] Write integration test for foreign table extraction in tests/integration/ForeignTableExtractionTest.java
-- [X] T155 [P] [US4] Write integration test for server options parsing in tests/integration/ServerOptionsTest.java
+#### Test Foreign Table Parser Implementation T157-T159
+
+- [X] T160 [P] [US4] Write integration test for foreign table extraction in tests/integration/ForeignTableExtractionTest.java
+- [X] T161 [P] [US4] Write integration test for server options parsing in tests/integration/ServerOptionsTest.java
 
 #### Additional AST Entities Needed for US4
 
-- [ ] T156 [P] [US4] Create AlterStatement class in src/main/java/com/sdchat/ogsql/ast/AlterStatement.java
+- [X] T162 [P] [US4] Update AlterStatement class in src/main/java/com/sdchat/ogsql/ast/AlterStatement.java
 
-#### Test T156
-- [ ] T157 [P] [US4] Write unit test for AlterStatement in tests/unit/ast/AlterStatementTest.java
+#### Test T162
+
+- [X] T163 [P] [US4] Write unit test for AlterStatement in src/test/java/com/sdchat/ogsql/unit/ast/AlterStatementTest.java
 
 #### Grammar Rules for ALTER
 
-- [ ] T158 [US4] Add ALTER TABLE grammar rules to OpenGaussSQL.g4
-- [ ] T159 [US4] Update ASTBuilder visit(AlterStatement) method
+- [X] T164 [US4] Add ALTER TABLE grammar rules to OpenGaussSQL.g4 (already exists)
+- [X] T165 [US4] Update ASTBuilder visit(AlterStatement) method (already exists)
 
-#### Test ALTER Grammar T158-T159
-- [ ] T160 [P] [US4] Write unit test for ALTER grammar rules in tests/unit/grammar/AlterGrammarTest.java
+#### Test ALTER Grammar T164-T165
+
+- [X] T166 [P] [US4] Write unit test for ALTER grammar rules in src/test/java/com/sdchat/ogsql/unit/grammar/AlterGrammarTest.java
 
 **Checkpoint**: User Story 4 complete - can parse foreign tables
 
@@ -388,42 +461,44 @@ description: "Task list for feature implementation"
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T161 [P] [US5] Write contract test for table name extraction in tests/contract/TableExtractionTest.java
-- [ ] T162 [P] [US5] Write contract test for column reference extraction in tests/contract/ColumnExtractionTest.java
-- [ ] T163 [P] [US5] Write contract test for function call extraction in tests/contract/FunctionExtractionTest.java
-- [ ] T164 [P] [US5] Write contract test for WHERE condition extraction in tests/contract/WhereExtractionTest.java
-- [ ] T165 [P] [US5] Write integration test for metadata extraction in tests/integration/MetadataIntegrationTest.java
+- [X] T167 [P] [US5] Write contract test for table name extraction in src/test/java/com/sdchat/ogsql/contract/TableExtractionTest.java
+- [ ] T168 [P] [US5] Write contract test for column reference extraction in tests/contract/ColumnExtractionTest.java
+- [ ] T169 [P] [US5] Write contract test for function call extraction in tests/contract/FunctionExtractionTest.java
+- [ ] T170 [P] [US5] Write contract test for WHERE condition extraction in tests/contract/WhereExtractionTest.java
+- [ ] T171 [P] [US5] Write integration test for metadata extraction in tests/integration/MetadataIntegrationTest.java
 
 ### Implementation for User Story 5
 
 #### Metadata Extraction Utilities
 
-- [ ] T166 [P] [US5] Create MetadataExtractor class in src/main/java/com/sdchat/ogsql/metadata/MetadataExtractor.java
-- [ ] T167 [P] [US5] Create ColumnReference class in src/main/java/com/sdchat/ogsql/metadata/ColumnReference.java
-- [ ] T168 [P] [US5] Create FunctionCall class in src/main/java/com/sdchat/ogsql/metadata/FunctionCall.java
-- [ ] T169 [P] [US5] Create Condition class in src/main/java/com/sdchat/ogsql/metadata/Condition.java
-- [ ] T170 [P] [US5] Create WhereExtractor utility class in src/main/java/com/sdchat/ogsql/metadata/WhereExtractor.java
+- [X] T172 [P] [US5] Create MetadataExtractor class in src/main/java/com/sdchat/ogsql/metadata/MetadataExtractor.java (already exists)
+- [X] T173 [P] [US5] Create ColumnReference class in src/main/java/com/sdchat/ogsql/metadata/ColumnReference.java (already exists)
+- [X] T174 [P] [US5] Create FunctionCall class in src/main/java/com/sdchat/ogsql/metadata/FunctionCall.java (already exists)
+- [X] T175 [P] [US5] Create Condition class in src/main/java/com/sdchat/ogsql/metadata/Condition.java (already exists)
+- [X] T176 [P] [US5] Create WhereExtractor utility class in src/main/java/com/sdchat/ogsql/metadata/WhereExtractor.java (already exists)
 
-#### Test Metadata Extraction T166-T170
-- [ ] T171 [P] [US5] Write unit test for MetadataExtractor in tests/unit/metadata/MetadataExtractorTest.java
-- [ ] T172 [P] [US5] Write unit test for ColumnReference in tests/unit/metadata/ColumnReferenceTest.java
-- [ ] T173 [P] [US5] Write unit test for FunctionCall in tests/unit/metadata/FunctionCallTest.java
-- [ ] T174 [P] [US5] Write unit test for Condition in tests/unit/metadata/ConditionTest.java
-- [ ] T175 [P] [US5] Write unit test for WhereExtractor in tests/unit/metadata/WhereExtractorTest.java
+#### Test Metadata Extraction T172-T176
+
+- [ ] T177 [P] [US5] Write unit test for MetadataExtractor in tests/unit/metadata/MetadataExtractorTest.java
+- [ ] T178 [P] [US5] Write unit test for ColumnReference in tests/unit/metadata/ColumnReferenceTest.java
+- [ ] T179 [P] [US5] Write unit test for FunctionCall in tests/unit/metadata/FunctionCallTest.java
+- [ ] T180 [P] [US5] Write unit test for Condition in tests/unit/metadata/ConditionTest.java
+- [ ] T181 [P] [US5] Write unit test for WhereExtractor in tests/unit/metadata/WhereExtractorTest.java
 
 #### Metadata Extraction Implementation
 
-- [ ] T176 [US5] Implement getTables() method in MetadataExtractor
-- [ ] T177 [US5] Implement getColumns() method in MetadataExtractor
-- [ ] T178 [US5] Implement getFunctions() method in MetadataExtractor
-- [ ] T179 [US5] Implement getWhereConditions() method in MetadataExtractor
-- [ ] T180 [US5] Create visitor-based metadata traversal in MetadataExtractor
+- [X] T182 [US5] Implement getTables() method in MetadataExtractor (already implemented)
+- [X] T183 [US5] Implement getColumns() method in MetadataExtractor (already implemented)
+- [X] T184 [US5] Implement getFunctions() method in MetadataExtractor (already implemented)
+- [X] T185 [US5] Implement getWhereConditions() method in MetadataExtractor (already implemented)
+- [X] T186 [US5] Create visitor-based metadata traversal in MetadataExtractor (already implemented)
 
-#### Test Metadata Extraction Implementation T176-T180
-- [ ] T181 [P] [US5] Write integration test for table extraction in tests/integration/TableExtractionTest.java
-- [ ] T182 [P] [US5] Write integration test for column extraction in tests/integration/ColumnExtractionTest.java
-- [ ] T183 [P] [US5] Write integration test for function extraction in tests/integration/FunctionExtractionTest.java
-- [ ] T184 [P] [US5] Write integration test for WHERE condition extraction in tests/integration/WhereExtractionTest.java
+#### Test Metadata Extraction Implementation T182-T186
+
+- [X] T187 [P] [US5] Write integration test for table extraction in src/test/java/com/sdchat/ogsql/contract/TableExtractionTest.java
+- [ ] T188 [P] [US5] Write integration test for column extraction in tests/integration/ColumnExtractionTest.java
+- [ ] T189 [P] [US5] Write integration test for function extraction in tests/integration/FunctionExtractionTest.java
+- [ ] T190 [P] [US5] Write integration test for WHERE condition extraction in tests/integration/WhereExtractionTest.java
 
 **Checkpoint**: User Story 5 complete - can extract metadata from parsed SQL
 
@@ -435,47 +510,53 @@ description: "Task list for feature implementation"
 
 ### Performance Optimization
 
-- [ ] T185 [P] Implement streaming input support in SQLParser for large files (100MB)
-- [ ] T186 [P] Implement configurable memory limit (default 500MB) in SQLParser
-- [ ] T187 [P] Implement file size validation (100MB limit) in SQLParser
-- [ ] T188 [P] Add performance benchmark tests in tests/integration/PerformanceBenchmarkTest.java
+- [ ] T199 [P] Implement streaming input support in SQLParser for large files (100MB)
+- [ ] T200 [P] Implement configurable memory limit (default 500MB) in SQLParser
+- [ ] T201 [P] Implement file size validation (100MB limit) in SQLParser
+- [ ] T202 [P] Add performance benchmark tests in tests/integration/PerformanceBenchmarkTest.java
 
-#### Test Performance T185-T187
-- [ ] T189 [P] Write integration test for streaming large files in tests/integration/StreamingTest.java
-- [ ] T190 [P] Write integration test for memory limit enforcement in tests/integration/MemoryLimitTest.java
-- [ ] T191 [P] Write integration test for file size validation in tests/integration/FileSizeValidationTest.java
+#### Test Performance T199-T201
+- [ ] T203 [P] Write integration test for streaming large files in tests/integration/StreamingTest.java
+- [ ] T204 [P] Write integration test for memory limit enforcement in tests/integration/MemoryLimitTest.java
+- [ ] T205 [P] Write integration test for file size validation in tests/integration/FileSizeValidationTest.java
+
+**NOTE**: These edge case tests MUST be executed before release. They are not optional polish tasks - they validate critical error handling scenarios defined in spec.md.
 
 ### Edge Cases
 
-- [ ] T192 [P] Write integration test for Unicode/multi-byte string handling in tests/integration/UnicodeTest.java
-- [ ] T193 [P] Write integration test for nested comments in tests/integration/NestedCommentsTest.java
-- [ ] T194 [P] Write integration test for identifier case sensitivity in tests/integration/CaseSensitivityTest.java
-- [ ] T195 [P] Write integration test for semicolons in string literals in tests/integration/SemicolonInStringTest.java
-- [ ] T196 [P] Write integration test for operator precedence in tests/integration/OperatorPrecedenceTest.java
+- [ ] T191 [P] Write integration test for Unicode/multi-byte string handling in tests/integration/UnicodeTest.java
+- [ ] T192 [P] Write integration test for nested comments in tests/integration/NestedCommentsTest.java
+- [ ] T193 [P] Write integration test for identifier case sensitivity in tests/integration/CaseSensitivityTest.java
+- [ ] T194 [P] Write integration test for semicolons in string literals in tests/integration/SemicolonInStringTest.java
+- [ ] T195 [P] Write integration test for operator precedence in tests/integration/OperatorPrecedenceTest.java
+- [ ] T196 [P] Write integration test for standard escape sequences in tests/integration/EscapeSequenceTest.java
+  - Test cases: `\'`, `\"`, `\\`, `\n`, `\t`, `\r`, `\0`
+- [ ] T197 [P] Write integration test for octal escapes in tests/integration/OctalEscapeTest.java
+- [ ] T198 [P] Write integration test for hex escapes in tests/integration/HexEscapeTest.java
 
 ### Documentation
 
-- [ ] T197 [P] Add Javadoc to all public AST classes in src/main/java/com/sdchat/ogsql/ast/
-- [ ] T198 [P] Add Javadoc to parser classes in src/main/java/com/sdchat/ogsql/parser/
-- [ ] T199 [P] Add Javadoc to metadata extraction in src/main/java/com/sdchat/ogsql/metadata/
-- [ ] T200 [P] Add comments to OpenGaussSQL.g4 grammar rules
-- [ ] T201 [P] Create CHANGELOG.md in root documenting breaking changes and version history
-- [ ] T202 [P] Update README.md with getting started guide linking to quickstart.md
-- [ ] T203 [P] Add example usage code snippets in README.md
+- [ ] T206 [P] Add Javadoc to all public AST classes in src/main/java/com/sdchat/ogsql/ast/
+- [ ] T207 [P] Add Javadoc to parser classes in src/main/java/com/sdchat/ogsql/parser/
+- [ ] T208 [P] Add Javadoc to metadata extraction in src/main/java/com/sdchat/ogsql/metadata/
+- [ ] T209 [P] Add comments to OpenGaussSQL.g4 grammar rules
+- [ ] T210 [P] Create CHANGELOG.md in root documenting breaking changes and version history
+- [ ] T211 [P] Update README.md with getting started guide linking to quickstart.md
+- [ ] T212 [P] Add example usage code snippets in README.md
 
 ### Code Coverage
 
-- [ ] T204 [P] Run all tests with coverage reporting
-- [ ] T205 [P] Verify 90% code coverage threshold is met
-- [ ] T206 [P] Add coverage report integration to build (Jacoco or similar)
+- [ ] T213 [P] Run all tests with coverage reporting
+- [ ] T214 [P] Verify 90% code coverage threshold is met
+- [ ] T215 [P] Add coverage report integration to build (Jacoco or similar)
 
 ### Final Validation
 
-- [ ] T207 [P] Run all contract tests against examples from contracts/examples/sql-examples.md
-- [ ] T208 [P] Run performance benchmarks to verify 1000+ statements/second target
-- [ ] T209 [P] Run full test suite (unit + integration + contract)
-- [ ] T210 [P] Validate all acceptance scenarios from spec.md pass
-- [ ] T211 [P] Verify all edge cases from spec.md are handled
+- [ ] T216 [P] Run all contract tests against examples from contracts/examples/sql-examples.md
+- [ ] T217 [P] Run performance benchmarks to verify 1000+ statements/second target
+- [ ] T218 [P] Run full test suite (unit + integration + contract)
+- [ ] T219 [P] Validate all acceptance scenarios from spec.md pass
+- [ ] T220 [P] Verify all edge cases from spec.md are handled
 
 **Checkpoint**: All user stories complete and polished - ready for release
 

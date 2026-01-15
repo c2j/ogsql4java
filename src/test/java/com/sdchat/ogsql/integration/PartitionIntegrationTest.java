@@ -79,8 +79,10 @@ class PartitionIntegrationTest {
 
     @Test
     void testMultipleStatementsWithPartitioning() throws ParseException {
-        String sql = "CREATE TABLE sales (id INT, sale_date DATE) PARTITION BY RANGE (sale_date);" +
-                    "CREATE TABLE customers (id INT, country VARCHAR(50)) PARTITION BY LIST (country);";
+        String sql = "CREATE TABLE sales (id INT, sale_date DATE) PARTITION BY RANGE (sale_date) " +
+                    "PARTITIONS 2;" +
+                    "CREATE TABLE customers (id INT, country VARCHAR(50)) PARTITION BY LIST (country) " +
+                    "PARTITIONS 2;";
         
         SQLParser parser = new SQLParser();
         var statements = parser.parseMultiple(sql);
@@ -92,7 +94,7 @@ class PartitionIntegrationTest {
             assertNotNull(statement);
             assertInstanceOf(CreateStatement.class, statement);
             CreateStatement createStmt = (CreateStatement) statement;
-            assertEquals(StatementType.CREATE_TABLE, createStmt.getStatementType());
+            assertNotNull(createStmt.getPartitioning());
         }
     }
 

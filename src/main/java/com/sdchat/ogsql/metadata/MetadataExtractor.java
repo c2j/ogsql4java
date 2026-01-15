@@ -9,7 +9,7 @@ import java.util.*;
  * Provides methods to extract tables, columns, functions, and WHERE conditions.
  * 
  * Note: This implementation works with the current minimal AST structure.
- * It will be enhanced as the AST implementation becomes more complete.
+ * It will be enhanced as AST implementation becomes more complete.
  */
 public class MetadataExtractor implements ASTVisitor<Void> {
 
@@ -88,8 +88,17 @@ public class MetadataExtractor implements ASTVisitor<Void> {
     public Void visit(SelectQuery query) {
         if (query == null) return null;
 
-        // Extract FROM clause tables
-        if (query.getFromClause() != null) {
+        // P2 optimization: Structured dataSources available
+        if (query.getDataSources() != null && !query.getDataSources().isEmpty()) {
+            for (DataSource ds : query.getDataSources()) {
+                if (ds.getName() != null && !ds.getName().isEmpty()) {
+                    tables.add(ds.getName());
+                }
+            }
+        }
+
+        // Fallback to string-based extraction when dataSources is empty
+        if (tables.isEmpty() && query.getFromClause() != null) {
             extractFromClause(query.getFromClause());
         }
 
@@ -120,7 +129,7 @@ public class MetadataExtractor implements ASTVisitor<Void> {
         if (statement == null) return null;
 
         // Current InsertStatement implementation is minimal
-        // This would need to be enhanced when the AST is more complete
+        // This would need to be enhanced when AST is more complete
 
         return null;
     }
@@ -130,7 +139,7 @@ public class MetadataExtractor implements ASTVisitor<Void> {
         if (statement == null) return null;
 
         // Current UpdateStatement implementation is minimal
-        // This would need to be enhanced when the AST is more complete
+        // This would need to be enhanced when AST is more complete
 
         return null;
     }
@@ -140,7 +149,7 @@ public class MetadataExtractor implements ASTVisitor<Void> {
         if (statement == null) return null;
 
         // Current DeleteStatement implementation is minimal
-        // This would need to be enhanced when the AST is more complete
+        // This would need to be enhanced when AST is more complete
 
         return null;
     }
@@ -156,7 +165,7 @@ public class MetadataExtractor implements ASTVisitor<Void> {
         if (statement == null) return null;
 
         // Current DropStatement implementation is minimal
-        // This would need to be enhanced when the AST is more complete
+        // This would need to be enhanced when AST is more complete
 
         return null;
     }
@@ -194,7 +203,8 @@ public class MetadataExtractor implements ASTVisitor<Void> {
 
     /**
      * Extracts tables from a FROM clause string.
-     * 
+     * Handles nested parentheses in JOIN conditions and subqueries.
+     *
      * @param fromClause The FROM clause string
      */
     private void extractFromClause(String fromClause) {
@@ -202,16 +212,204 @@ public class MetadataExtractor implements ASTVisitor<Void> {
             return;
         }
 
-        // Simple table extraction - split by commas and handle aliases
-        String[] tableParts = fromClause.split(",");
-        for (String tablePart : tableParts) {
-            tablePart = tablePart.trim();
-            if (!tablePart.isEmpty()) {
-                // Handle table aliases (table_name alias)
-                String[] parts = tablePart.split("\\s+");
-                if (parts.length > 0) {
+        // Process: FROM clause while tracking parenthesis nesting levels
+        // Extract table names from subqueries before skipping them
+        StringBuilder result = new StringBuilder();
+        int parenLevel = 0;
+        boolean inOnOrUsingClause = false;
+        boolean inAsKeyword = false;
+
+        for (int i = 0; i < fromClause.length(); i++) {
+            char c = fromClause.charAt(i);
+
+            // Track parenthesis nesting for subqueries
+            if (c == '(') {
+                parenLevel++;
+                // Only treat as subquery if it contains SELECT (not JOIN conditions or function calls)
+                if (isSubquery(fromClause, i)) {
+                    // Extract table names from subquery before skipping it
+                    extractTablesFromSubquery(fromClause, i);
+                    // Skip entire subquery (until matching closing parenthesis at original level)
+                    int startLevel = parenLevel;
+                    int nestedLevel = 1;
+                    i++;
+                    while (i < fromClause.length() && nestedLevel > 0) {
+                        if (fromClause.charAt(i) == '(') nestedLevel++;
+                        else if (fromClause.charAt(i) == ')') nestedLevel--;
+                        i++;
+                    }
+                    i--; // Back up to closing parenthesis at original level
+                }
+                continue;
+            } else if (c == ')') {
+                parenLevel--;
+            }
+
+            // Only process keywords when we're not inside parentheses (subqueries)
+            if (parenLevel == 0) {
+                // Check for JOIN keywords (case-insensitive)
+                if (i <= fromClause.length() - 5) {
+                    String fiveChars = fromClause.substring(i, Math.min(i + 5, fromClause.length()));
+                    if (fiveChars.equalsIgnoreCase("JOIN ")) {
+                        inOnOrUsingClause = false;
+                        result.append(", ");
+                        i += 4; // Skip "JOIN"
+                        continue;
+                    }
+                }
+
+                // Check for LEFT, RIGHT, FULL, INNER, CROSS keywords
+                if (i <= fromClause.length() - 6) {
+                    String sixChars = fromClause.substring(i, Math.min(i + 6, fromClause.length()));
+                    if (sixChars.equalsIgnoreCase("LEFT ") ||
+                        sixChars.equalsIgnoreCase("RIGHT ") ||
+                        sixChars.equalsIgnoreCase("FULL ")) {
+                        inOnOrUsingClause = false;
+                        result.append(sixChars);
+                        i += 5; // Skip keyword and space
+                        continue;
+                    }
+                }
+
+                // Check for OUTER
+                if (i <= fromClause.length() - 6 && fromClause.substring(i, Math.min(i + 6, fromClause.length())).equalsIgnoreCase("OUTER")) {
+                    result.append("OUTER ");
+                    i += 5;
+                    continue;
+                }
+
+                // Check for INNER
+                if (i <= fromClause.length() - 6 && fromClause.substring(i, Math.min(i + 6, fromClause.length())).equalsIgnoreCase("INNER")) {
+                    result.append("INNER ");
+                    i += 5;
+                    continue;
+                }
+
+                // Check for CROSS
+                if (i <= fromClause.length() - 6 && fromClause.substring(i, Math.min(i + 6, fromClause.length())).equalsIgnoreCase("CROSS")) {
+                    result.append("CROSS ");
+                    i += 5;
+                    continue;
+                }
+
+                // Check for AS keyword
+                if (i + 3 <= fromClause.length() && fromClause.substring(i, i + 3).equalsIgnoreCase("AS ")) {
+                    inAsKeyword = true;
+                    i += 2;
+                    continue;
+                }
+
+                // Check for ON keyword
+                if (i + 3 <= fromClause.length() && fromClause.substring(i, i + 3).equalsIgnoreCase("ON ")) {
+                    inOnOrUsingClause = true;
+                    i += 2;
+                    continue;
+                }
+
+                // Check for USING keyword
+                if (i + 6 <= fromClause.length() && fromClause.substring(i, i + 6).equalsIgnoreCase("USING ")) {
+                    inOnOrUsingClause = true;
+                    i += 5;
+                    continue;
+                }
+            }
+
+            // Skip characters in ON/USING clauses
+            if (inOnOrUsingClause) {
+                // Exit ON/USING clause when we reach comma at parenLevel 0 or another keyword
+                if (parenLevel == 0 && c == ',') {
+                    inOnOrUsingClause = false;
+                }
+                continue;
+            }
+
+            // Add character to result (table name, not subquery content)
+            if (parenLevel == 0) {
+                result.append(c);
+            }
+        }
+
+        // Now extract table names from the normalized result
+        String normalized = result.toString();
+        String[] tokens = normalized.split(",");
+        for (String token : tokens) {
+            token = token.trim();
+            if (!token.isEmpty()) {
+                // Extract first word (table name) before any alias
+                String[] parts = token.split("\\s+");
+                if (parts.length > 0 && !parts[0].isEmpty()) {
                     tables.add(parts[0]);
                 }
+            }
+        }
+    }
+
+    /**
+     * Checks if parentheses at the given index represent a subquery.
+     * A subquery is identified by the presence of a SELECT keyword.
+     *
+     * @param fromClause The full FROM clause string
+     * @param startIndex The index where opening parenthesis was found
+     * @return true if the parentheses contain a subquery, false otherwise
+     */
+    private boolean isSubquery(String fromClause, int startIndex) {
+        // Check if there's enough content after the opening parenthesis
+        if (startIndex + 1 >= fromClause.length()) {
+            return false;
+        }
+
+        // Look for SELECT keyword after the opening parenthesis (with optional whitespace)
+        int contentStart = startIndex + 1;
+        int maxLength = Math.min(contentStart + 20, fromClause.length());
+        String content = fromClause.substring(contentStart, maxLength).trim().toUpperCase();
+
+        // Check if it starts with SELECT
+        return content.startsWith("SELECT");
+    }
+
+    /**
+     * Extracts table names from a subquery (text inside parentheses).
+     * This is a simplified extraction that looks for FROM clause patterns.
+     *
+     * @param fromClause The full FROM clause string
+     * @param startIndex The index where opening parenthesis was found
+     */
+    private void extractTablesFromSubquery(String fromClause, int startIndex) {
+        // Find the closing parenthesis at the same level
+        int parenLevel = 1;
+        int endIndex = startIndex + 1;
+
+        while (endIndex < fromClause.length() && parenLevel > 0) {
+            if (fromClause.charAt(endIndex) == '(') parenLevel++;
+            else if (fromClause.charAt(endIndex) == ')') parenLevel--;
+            endIndex++;
+        }
+
+        // Extract the subquery content
+        String subqueryContent = fromClause.substring(startIndex + 1, endIndex);
+
+        // Look for "FROM" keyword in subquery to extract table names
+        // This is a simplified approach - a full solution would parse the subquery recursively
+        String upperContent = subqueryContent.toUpperCase();
+        int fromIndex = upperContent.indexOf(" FROM ");
+
+        if (fromIndex > 0) {
+            // Extract the table name after "FROM"
+            int nameStart = fromIndex + 5;
+            int nameEnd = nameStart;
+
+            // Find the end of the table name (space, comma, or closing parenthesis)
+            while (nameEnd < subqueryContent.length()) {
+                char c = subqueryContent.charAt(nameEnd);
+                if (c == ' ' || c == ',' || nameEnd == subqueryContent.length() - 1) {
+                    break;
+                }
+                nameEnd++;
+            }
+
+            String tableName = subqueryContent.substring(nameStart, nameEnd).trim();
+            if (!tableName.isEmpty() && !tableName.toUpperCase().startsWith("SELECT")) {
+                tables.add(tableName);
             }
         }
     }

@@ -101,6 +101,7 @@ com/sdchat/ogsql/grammar/OpenGaussSQLParser$InExprContext.class
 com/sdchat/ogsql/ast/ValueExpression.class
 com/sdchat/ogsql/ast/PartitionType.class
 com/sdchat/ogsql/grammar/OpenGaussSQLParser$AlterforeigntablecmdsContext.class
+com/sdchat/ogsql/ast/AlterCommand.class
 com/sdchat/ogsql/grammar/OpenGaussSQLParser$StmtblockContext.class
 com/sdchat/ogsql/grammar/OpenGaussSQLParser$ColumnDefContext.class
 com/sdchat/ogsql/ast/DataSource.class

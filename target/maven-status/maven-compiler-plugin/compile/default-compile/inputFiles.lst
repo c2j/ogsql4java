@@ -1,4 +1,5 @@
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/main/java/com/sdchat/ogsql/OgsqlApplication.java
+/Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/main/java/com/sdchat/ogsql/ast/AlterCommand.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/main/java/com/sdchat/ogsql/ast/AlterStatement.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/main/java/com/sdchat/ogsql/ast/Column.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/main/java/com/sdchat/ogsql/ast/Constraint.java

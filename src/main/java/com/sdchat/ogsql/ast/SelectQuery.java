@@ -6,10 +6,12 @@ import java.util.List;
 
 public class SelectQuery implements SQLStatement {
     private String fromClause;
+    private List<DataSource> dataSources;
     private List<PerformanceHint> hints;
 
     public SelectQuery() {
         this.hints = new ArrayList<>();
+        this.dataSources = new ArrayList<>();
     }
 
     public void setFromClause(String fromClause) {
@@ -18,6 +20,20 @@ public class SelectQuery implements SQLStatement {
 
     public String getFromClause() {
         return fromClause;
+    }
+
+    public List<DataSource> getDataSources() {
+        return dataSources;
+    }
+
+    public void setDataSources(List<DataSource> dataSources) {
+        this.dataSources = dataSources != null ? new ArrayList<>(dataSources) : new ArrayList<>();
+    }
+
+    public void addDataSource(DataSource dataSource) {
+        if (dataSource != null) {
+            this.dataSources.add(dataSource);
+        }
     }
 
     public List<PerformanceHint> getHints() {

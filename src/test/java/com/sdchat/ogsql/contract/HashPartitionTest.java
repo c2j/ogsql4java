@@ -10,20 +10,35 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Contract test for HASH partitioning parsing.
- * Tests the grammar contract for CREATE TABLE with HASH partitioning clauses.
+ * Tests CREATE TABLE with HASH partitioning clauses.
  */
 class HashPartitionTest {
 
     @Test
     void testHashPartitioningBasic() throws ParseException {
-        String sql = "CREATE TABLE sales (id INT, customer_id INT) PARTITION BY HASH (customer_id)";
+        String sql = "CREATE TABLE sales (id INT, customer_id INT) PARTITION BY HASH (customer_id);";
+
         SQLParser parser = new SQLParser();
-        
         SQLStatement statement = parser.parse(sql);
-        
+
         assertNotNull(statement);
         assertInstanceOf(CreateStatement.class, statement);
-        
+
+        CreateStatement createStmt = (CreateStatement) statement;
+        assertEquals(StatementType.CREATE_TABLE, createStmt.getStatementType());
+    }
+
+    @Test
+    void testHashPartitioningMultipleColumns() throws ParseException {
+        String sql = "CREATE TABLE sales (id INT, customer_id INT, region VARCHAR(50)) " +
+                     "PARTITION BY HASH (customer_id, region);";
+
+        SQLParser parser = new SQLParser();
+        SQLStatement statement = parser.parse(sql);
+
+        assertNotNull(statement);
+        assertInstanceOf(CreateStatement.class, statement);
+
         CreateStatement createStmt = (CreateStatement) statement;
         assertEquals(StatementType.CREATE_TABLE, createStmt.getStatementType());
     }
@@ -31,29 +46,14 @@ class HashPartitionTest {
     @Test
     void testHashPartitioningWithPartitionCount() throws ParseException {
         String sql = "CREATE TABLE sales (id INT, customer_id INT) " +
-                    "PARTITION BY HASH (customer_id) PARTITIONS 8";
-        SQLParser parser = new SQLParser();
-        
-        SQLStatement statement = parser.parse(sql);
-        
-        assertNotNull(statement);
-        assertInstanceOf(CreateStatement.class, statement);
-        
-        CreateStatement createStmt = (CreateStatement) statement;
-        assertEquals(StatementType.CREATE_TABLE, createStmt.getStatementType());
-    }
+                     "PARTITION BY HASH (customer_id) PARTITIONS 4;";
 
-    @Test
-    void testHashPartitioningMultipleColumns() throws ParseException {
-        String sql = "CREATE TABLE sales (id INT, customer_id INT, order_date DATE) " +
-                    "PARTITION BY HASH (customer_id, order_date)";
         SQLParser parser = new SQLParser();
-        
         SQLStatement statement = parser.parse(sql);
-        
+
         assertNotNull(statement);
         assertInstanceOf(CreateStatement.class, statement);
-        
+
         CreateStatement createStmt = (CreateStatement) statement;
         assertEquals(StatementType.CREATE_TABLE, createStmt.getStatementType());
     }
@@ -61,27 +61,28 @@ class HashPartitionTest {
     @Test
     void testHashPartitioningLargePartitionCount() throws ParseException {
         String sql = "CREATE TABLE sales (id INT, customer_id INT) " +
-                    "PARTITION BY HASH (customer_id) PARTITIONS 64";
+                     "PARTITION BY HASH (customer_id) PARTITIONS 64;";
+
         SQLParser parser = new SQLParser();
-        
         SQLStatement statement = parser.parse(sql);
-        
+
         assertNotNull(statement);
         assertInstanceOf(CreateStatement.class, statement);
-        
+
         CreateStatement createStmt = (CreateStatement) statement;
         assertEquals(StatementType.CREATE_TABLE, createStmt.getStatementType());
     }
 
     @Test
     void testHashPartitioningErrorHandling() {
-        String sql = "CREATE TABLE sales (id INT) PARTITION BY HASH";  // Missing partition key
+        String sql = "CREATE TABLE sales (id INT) PARTITION BY HASH";
+
         SQLParser parser = new SQLParser();
-        
+
         ParseException exception = assertThrows(ParseException.class, () -> {
             parser.parse(sql);
         });
-        
+
         assertNotNull(exception.getMessage());
         assertTrue(exception.getMessage().length() > 0);
     }
@@ -89,29 +90,14 @@ class HashPartitionTest {
     @Test
     void testHashPartitioningSinglePartition() throws ParseException {
         String sql = "CREATE TABLE sales (id INT, customer_id INT) " +
-                    "PARTITION BY HASH (customer_id) PARTITIONS 1";
-        SQLParser parser = new SQLParser();
-        
-        SQLStatement statement = parser.parse(sql);
-        
-        assertNotNull(statement);
-        assertInstanceOf(CreateStatement.class, statement);
-        
-        CreateStatement createStmt = (CreateStatement) statement;
-        assertEquals(StatementType.CREATE_TABLE, createStmt.getStatementType());
-    }
+                     "PARTITION BY HASH (customer_id) PARTITIONS 1";
 
-    @Test
-    void testHashPartitioningNoExplicitPartitions() throws ParseException {
-        // HASH partitioning without explicit PARTITIONS count
-        String sql = "CREATE TABLE sales (id INT, customer_id INT) PARTITION BY HASH (customer_id)";
         SQLParser parser = new SQLParser();
-        
         SQLStatement statement = parser.parse(sql);
-        
+
         assertNotNull(statement);
         assertInstanceOf(CreateStatement.class, statement);
-        
+
         CreateStatement createStmt = (CreateStatement) statement;
         assertEquals(StatementType.CREATE_TABLE, createStmt.getStatementType());
     }

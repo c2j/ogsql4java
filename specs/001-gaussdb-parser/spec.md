@@ -97,8 +97,8 @@ A developer needs to extract structured information from parsed SQL queries (tab
 - How does the parser handle SQL with Unicode characters and multi-byte strings?
 - What happens when SQL contains nested comments (both -- and /* */ styles)?
 - How does the parser handle identifier case sensitivity (quoted vs unquoted)?
-- What happens when hints contain invalid table or column names?
-- How does the parser handle ambiguous syntax that could be interpreted multiple ways?
+- What happens when hints contain invalid table or column names? → Parser SHOULD report a semantic error with severity WARNING (per US2 Acceptance Scenario 3) and continue parsing the query
+- How does the parser handle ambiguous syntax that could be interpreted multiple ways? → Grammar rules MUST be unambiguous per Constitution Principle I; ambiguous syntax is a grammar defect requiring review. Parser MUST fail fast with clear error indicating ambiguous construct location
 - What happens when partitioning values are of incompatible types?
 - How does the parser handle C-style escape sequences in string literals?
 - What happens when SQL contains semicolons inside string literals?
@@ -119,7 +119,16 @@ A developer needs to extract structured information from parsed SQL queries (tab
 - **FR-009**: System MUST parse JOIN syntax including INNER, LEFT, RIGHT, FULL, and CROSS joins
 - **FR-010**: System MUST support subqueries and common table expressions (CTEs)
 - **FR-011**: System MUST handle quoted and unquoted identifiers with proper case sensitivity rules
-- **FR-012**: System MUST parse string literals with support for escape sequences and quoted quotes
+- **FR-012**: System MUST parse string literals with support for the following escape sequences:
+  - Single quote escape: `\'` (single quote within single-quoted string)
+  - Double quote escape: `\"` (double quote within double-quoted string)
+  - Backslash escape: `\\` (literal backslash character)
+  - Newline escape: `\n`
+  - Tab escape: `\t`
+  - Carriage return escape: `\r`
+  - Null escape: `\0`
+  - Octal escapes: `\OOO` (where O is octal digit)
+  - Hex escapes: `\xHH` (where H is hex digit)
 - **FR-013**: System MUST handle SQL comments (both -- and /* */ styles)
 - **FR-014**: System MUST support parsing of SQL stored in files up to 100MB
 - **FR-015**: System MUST provide a way to traverse and process the parsed structured representation to extract information
@@ -127,14 +136,15 @@ A developer needs to extract structured information from parsed SQL queries (tab
 ### Key Entities
 
 - **SQLStatement**: Represents a complete SQL command with its type and structured information
-- **QueryDefinition**: Represents SELECT query with attributes for DISTINCT, selected columns, table sources, filter conditions, grouping, sorting, and limits
-- **TableDefinition**: Represents CREATE TABLE/INDEX/VIEW command with object name, definition elements, and options
+- **SelectQuery**: Represents SELECT query with attributes for DISTINCT, selected columns, table sources, filter conditions, grouping, sorting, and limits
+- **CreateStatement**: Represents CREATE TABLE command with object name, column definitions, and constraints
 - **PerformanceHint**: Represents a query optimizer directive with hint type (NestLoop, MergeJoin, HashJoin) and affected table references
 - **PartitioningInformation**: Represents how a table is divided with partition type (RANGE, LIST, HASH), partition keys, and partition values
 - **ExternalTable**: Represents foreign table definition connecting to external data sources with server name, connection options, and column mappings
 - **Column**: Represents a table column with name, data type, constraints, and default value
 - **DataSource**: Represents a table or data source in FROM clause with optional alias and join conditions
 - **ValueExpression**: Represents a computed value (column reference, function call, literal, operator) with its type and value
+- **Condition**: Represents a boolean expression (WHERE, HAVING, JOIN condition) with left operand, operator, and right operand
 - **ParsingError**: Represents a parsing problem with error message, line number, column number, and severity level
 
 ## Assumptions
@@ -146,7 +156,8 @@ A developer needs to extract structured information from parsed SQL queries (tab
 - Hints are syntactically optional and should not cause parsing failures if absent
 - Partitioning syntax follows OpenGauss documentation patterns
 - Maximum SQL file size for parsing is 100MB (can be adjusted based on actual requirements)
-- Performance target of 1000 statements/second is sufficient for typical use cases (can be adjusted)
+- Performance target: Minimum 1000 SQL statements/second for typical queries (measured by SC-005); actual target can be adjusted based on production requirements
+- Test suite baseline: Minimum 200 test cases to validate SC-003 percentage metrics
 
 ## Success Criteria *(mandatory)*
 
@@ -154,7 +165,7 @@ A developer needs to extract structured information from parsed SQL queries (tab
 
 - **SC-001**: Parser correctly parses 100% of valid OpenGauss SQL statements from the provided gram.xml command examples
 - **SC-002**: Parser successfully generates valid structured representations for all standard SQL commands (SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP)
-- **SC-003**: Parser correctly identifies and reports syntax errors with accurate line and column positions in 95% of test cases
+- **SC-003**: Parser correctly identifies and reports syntax errors with accurate line and column positions across all test cases (unit, integration, and contract tests)
 - **SC-004**: System parses OpenGauss-specific features (hints, partitioning, foreign tables) with 100% accuracy for documented syntax patterns
 - **SC-005**: Parser processes at least 1000 SQL statements per second for typical queries
 - **SC-006**: System maintains test coverage of at least 90% for all parsing functionality

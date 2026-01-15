@@ -60,24 +60,80 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
         if (ctx.fromclause() != null && ctx.fromclause().fromExpression() != null) {
             StringBuilder fromClause = new StringBuilder();
             OpenGaussSQLParser.FromExpressionContext fromExpr = ctx.fromclause().fromExpression();
-            
-            // Handle table expressions
+
+            // Handle table expressions (handles both comma-separated and first table in JOIN)
             if (fromExpr.tableExpression() != null) {
+                boolean first = true;
                 for (OpenGaussSQLParser.TableExpressionContext tableExpr : fromExpr.tableExpression()) {
-                    if (tableExpr.tableReference() != null && tableExpr.tableReference().IDENTIFIER() != null) {
-                        fromClause.append(tableExpr.tableReference().IDENTIFIER().getText());
-                        if (tableExpr.optalias() != null && tableExpr.optalias().IDENTIFIER() != null) {
-                            fromClause.append(" ").append(tableExpr.optalias().IDENTIFIER().getText());
+                    if (!first) {
+                        fromClause.append(",");
+                    }
+                    first = false;
+
+                    if (tableExpr.tableReference() != null) {
+                        // Handle both simple table name and subquery
+                        if (tableExpr.tableReference().IDENTIFIER() != null) {
+                            fromClause.append(tableExpr.tableReference().IDENTIFIER().getText());
+
+                            // Create DataSource for structured access (P2 optimization)
+                            DataSource dataSource = new DataSource(tableExpr.tableReference().IDENTIFIER().getText());
+                            if (tableExpr.optalias() != null) {
+                                String alias = tableExpr.optalias().getText();
+                                if (alias != null && !alias.isEmpty()) {
+                                    fromClause.append(" ").append(alias);
+                                    dataSource.setAlias(alias);
+                                }
+                            }
+                            query.addDataSource(dataSource);
+
+                        } else if (tableExpr.tableReference().selectstmt() != null) {
+                            // For subquery, only append alias, not subquery content
+                            if (tableExpr.optalias() != null) {
+                                String aliasText = tableExpr.optalias().getText();
+                                if (aliasText != null && !aliasText.isEmpty()) {
+                                    // Strip "AS" prefix using simple String operations
+                                    String finalAlias = aliasText.trim();
+                                    if (finalAlias.toUpperCase().startsWith("AS")) {
+                                        finalAlias = finalAlias.substring(2).trim();
+                                    }
+                                    fromClause.append(" ").append(finalAlias);
+                                }
+                            }
+
+                            // Note: Subquery DataSource creation would require recursively visiting of subquery
+                            // For now, we only create DataSource for simple table references
                         }
                     }
                 }
             }
-            
+ 
             // Handle join expressions
             if (fromExpr.joinExpression() != null) {
                 for (OpenGaussSQLParser.JoinExpressionContext joinExpr : fromExpr.joinExpression()) {
-                    if (joinExpr.tableExpression() != null && joinExpr.tableExpression().tableReference() != null && joinExpr.tableExpression().tableReference().IDENTIFIER() != null) {
-                        fromClause.append(" ").append(joinExpr.tableExpression().tableReference().IDENTIFIER().getText());
+                    if (joinExpr.joinType() != null) {
+                        fromClause.append(" ").append(joinExpr.joinType().getText());
+                    }
+                    if (joinExpr.tableExpression() != null) {
+                        if (joinExpr.tableExpression().tableReference() != null) {
+                            String tableRef = joinExpr.tableExpression().tableReference().getText();
+                            if (tableRef != null && !tableRef.isEmpty()) {
+                                fromClause.append(" ").append(tableRef);
+
+                                // Create DataSource for joined tables (P2 optimization)
+                                DataSource dataSource = new DataSource(tableRef);
+                                if (joinExpr.joinType() != null) {
+                                    dataSource.setJoinType(joinExpr.joinType().getText());
+                                }
+                                if (joinExpr.tableExpression().optalias() != null) {
+                                    String alias = joinExpr.tableExpression().optalias().getText();
+                                    if (alias != null && !alias.isEmpty()) {
+                                        fromClause.append(" ").append(alias);
+                                        dataSource.setAlias(alias);
+                                    }
+                                }
+                                query.addDataSource(dataSource);
+                            }
+                        }
                     }
                 }
             }
