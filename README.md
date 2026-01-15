@@ -27,6 +27,19 @@ A comprehensive Java library for parsing OpenGauss SQL statements using ANTLR4. 
 
 ## Quick Start
 
+### 📚 User Guide
+
+New to the OpenGauss SQL Parser? Check out the comprehensive [User Guide](docs/user-guide/README.md) with:
+
+- **Quick Start Guide** - Parse your first SQL in 5 minutes
+- **Common Use Cases** - SELECT, INSERT, UPDATE, DELETE examples
+- **DDL Operations** - CREATE, ALTER, DROP with partitioning
+- **Advanced Features** - Query hints, metadata extraction, foreign tables
+- **Error Handling** - Troubleshooting common issues
+- **Configuration** - Performance tuning and parser options
+
+All examples are runnable with complete explanations!
+
 ### Maven Dependency
 
 ```xml
