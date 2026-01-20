@@ -1,0 +1,382 @@
+openapi: 3.0.0
+info:
+  title: OpenGauss SQL Parser API
+  version: 1.0.0
+  description: |
+    API for parsing OpenGauss SQL statements, generating Abstract Syntax Trees (AST),
+    and extracting metadata. Supports standard SQL commands and OpenGauss-specific features
+    including query optimizer hints, partitioned tables, and foreign tables.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /api/v1/parse:
+    post:
+      summary: Parse SQL statement
+      description: |
+        Parses a single OpenGauss SQL statement and returns its structured AST representation.
+        Supports SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, and DROP commands.
+      operationId: parseSQL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseRequest'
+      responses:
+        '200':
+          description: Successfully parsed SQL statement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseResponse'
+        '400':
+          description: Invalid SQL syntax or parsing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Input exceeds maximum size (100MB)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/parse/multiple:
+    post:
+      summary: Parse multiple SQL statements
+      description: |
+        Parses multiple SQL statements separated by semicolons and returns their
+        structured AST representations. Each statement is parsed independently.
+      operationId: parseMultipleSQL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MultipleParseRequest'
+      responses:
+        '200':
+          description: Successfully parsed all SQL statements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultipleParseResponse'
+        '400':
+          description: One or more statements had parsing errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultipleParseResponse'
+
+  /api/v1/metadata:
+    post:
+      summary: Extract SQL metadata
+      description: |
+        Parses SQL and extracts structured metadata including table names, column references,
+        function calls, and WHERE conditions without returning full AST.
+      operationId: extractMetadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseRequest'
+      responses:
+        '200':
+          description: Successfully extracted metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetadataResponse'
+        '400':
+          description: Invalid SQL syntax or parsing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/validate:
+    post:
+      summary: Validate SQL syntax only
+      description: |
+        Validates SQL syntax without generating full AST. Returns success or detailed
+        error information if syntax is invalid.
+      operationId: validateSQL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseRequest'
+      responses:
+        '200':
+          description: SQL syntax is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+        '400':
+          description: SQL syntax is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+
+components:
+  schemas:
+    ParseRequest:
+      type: object
+      required:
+        - sql
+      properties:
+        sql:
+          type: string
+          description: OpenGauss SQL statement to parse
+          maxLength: 104857600  # 100MB in bytes
+          example: "SELECT id, name FROM users WHERE active = true"
+        options:
+          type: object
+          description: Optional parsing options
+          properties:
+            includeHints:
+              type: boolean
+              description: Include query optimizer hints in AST
+              default: true
+            includeLocation:
+              type: boolean
+              description: Include line/column position information
+              default: true
+            errorStrategy:
+              type: string
+              enum: [bail, default]
+              description: Error handling strategy
+              default: default
+
+    MultipleParseRequest:
+      type: object
+      required:
+        - sql
+      properties:
+        sql:
+          type: string
+          description: Multiple SQL statements separated by semicolons
+          maxLength: 104857600
+          example: |
+            CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255));
+            SELECT * FROM users;
+
+    ParseResponse:
+      type: object
+      required:
+        - statementType
+        - ast
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Whether parsing succeeded
+        statementType:
+          type: string
+          enum: [SELECT, INSERT, UPDATE, DELETE, CREATE_TABLE, ALTER_TABLE, DROP_TABLE, CREATE_FOREIGN_TABLE, UNKNOWN]
+          description: Type of SQL statement
+        ast:
+          type: object
+          description: Abstract Syntax Tree representation
+          properties:
+            # Properties vary by statementType
+            # Example for SELECT:
+            distinct:
+              type: boolean
+              example: false
+            selectedColumns:
+              type: array
+              items:
+                type: object
+              description: Selected columns or expressions
+            fromClause:
+              type: array
+              items:
+                type: object
+              description: Tables, joins, and subqueries
+            whereClause:
+              type: object
+              nullable: true
+              description: Filter condition
+            hints:
+              type: array
+              items:
+                $ref: '#/components/schemas/PerformanceHint'
+              description: Query optimizer hints
+        location:
+          type: object
+          description: Position information if includeLocation=true
+          properties:
+            startLine:
+              type: integer
+              description: Line number where statement starts
+            startColumn:
+              type: integer
+              description: Column number where statement starts
+            endLine:
+              type: integer
+              description: Line number where statement ends
+            endColumn:
+              type: integer
+              description: Column number where statement ends
+
+    MultipleParseResponse:
+      type: object
+      required:
+        - statements
+      properties:
+        statements:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParseResponse'
+          description: Array of parsed statements (may include errors)
+        statementCount:
+          type: integer
+          description: Total number of statements parsed
+        successCount:
+          type: integer
+          description: Number of successfully parsed statements
+
+    MetadataResponse:
+      type: object
+      required:
+        - tables
+        - columns
+      properties:
+        tables:
+          type: array
+          items:
+            type: string
+          description: List of table names referenced in SQL
+          example: ["users", "orders"]
+        columns:
+          type: array
+          items:
+            type: object
+          description: List of column references
+          properties:
+            name:
+              type: string
+              description: Column name
+            table:
+              type: string
+              nullable: true
+              description: Table name (null if ambiguous)
+            location:
+              type: string
+              description: Where column is referenced (WHERE, SELECT, etc.)
+        functions:
+          type: array
+          items:
+            type: object
+          description: List of function calls
+          properties:
+            name:
+              type: string
+              description: Function name
+            arguments:
+              type: integer
+              description: Number of arguments
+        whereConditions:
+          type: array
+          items:
+            type: object
+          description: Filter conditions from WHERE clause
+          properties:
+            left:
+              type: string
+              description: Left side of condition
+            operator:
+              type: string
+              description: Comparison operator
+            right:
+              type: string
+              description: Right side of condition
+
+    ValidationResponse:
+      type: object
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+          description: Whether SQL syntax is valid
+        error:
+          $ref: '#/components/schemas/ParsingError'
+          nullable: true
+
+    PerformanceHint:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [NestLoop, MergeJoin, HashJoin, HashAggregate, BitmapScan, IndexScan]
+          description: Type of hint
+        tableReferences:
+          type: array
+          items:
+            type: string
+          description: Tables affected by hint
+          example: ["users", "orders"]
+        parameters:
+          type: object
+          additionalProperties:
+            type: string
+          description: Hint-specific parameters
+          example: {"rows": "1000"}
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ParsingError'
+
+    ParsingError:
+      type: object
+      required:
+        - message
+        - line
+        - column
+        - severity
+      properties:
+        message:
+          type: string
+          description: Human-readable error description
+          example: "Syntax error: expected FROM keyword"
+        line:
+          type: integer
+          minimum: 1
+          description: Line number where error occurred
+          example: 5
+        column:
+          type: integer
+          minimum: 1
+          description: Column number where error occurred
+          example: 12
+        severity:
+          type: string
+          enum: [ERROR, WARNING, INFO]
+          description: Error severity level
+          example: "ERROR"
+        context:
+          type: string
+          maxLength: 100
+          description: SQL snippet around error
+          example: "WHERE id =1"
+        suggestion:
+          type: string
+          nullable: true
+          description: Hint for fixing the error
+          example: "Did you mean WHERE id = 1?"
