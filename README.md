@@ -40,6 +40,19 @@ New to the OpenGauss SQL Parser? Check out the comprehensive [User Guide](docs/u
 
 All examples are runnable with complete explanations!
 
+### 👨‍💻 Developer Guide
+
+Looking for in-depth development guidance? See the [Developer Guide](docs/DEVELOPER_GUIDE.md) with:
+
+- **Simple SQL Parsing** - Basic SELECT, INSERT, UPDATE, DELETE operations
+- **Complex SQL Parsing** - Multi-table JOINs, subqueries, window functions
+- **iBatis XML SQL Parsing** - Extract and parse SQL from iBatis mapper files
+- **Stored Procedure Parsing** - CREATE, ALTER, CALL, DROP procedures with full parameter support
+- **Metadata Extraction** - Extract tables, columns, functions, and WHERE conditions
+- **Error Handling** - Handle syntax, semantic, and validation errors
+- **Performance Optimization** - Configure limits and use streaming for large files
+- **Best Practices** - Common patterns for effective parser usage
+
 ### Maven Dependency
 
 ```xml
