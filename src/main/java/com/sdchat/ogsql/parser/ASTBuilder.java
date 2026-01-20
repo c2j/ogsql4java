@@ -727,6 +727,20 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
             stmt.setSecurity(security);
         }
 
+        // VARIADIC parameter must be the last parameter
+        if (stmt.hasParameters()) {
+            for (int i = 0; i < stmt.getParameters().size() - 1; i++) {
+                ProcedureParameter param = stmt.getParameters().get(i);
+                if (param.getMode() == ProcedureParameter.ParameterMode.VARIADIC) {
+                    throw new SemanticErrorException(
+                        "VARIADIC parameter must be the last parameter",
+                        ctx.start.getLine(),
+                        "VARIADIC parameter at position " + i + " must be last"
+                    );
+                }
+            }
+        }
+
         return stmt;
     }
 

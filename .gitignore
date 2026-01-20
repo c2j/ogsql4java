@@ -17,6 +17,7 @@ replay_pid*
 ### ANTLR4 ###
 *.tokens
 *.interp
+*.bak
 
 ### Maven ###
 target/
