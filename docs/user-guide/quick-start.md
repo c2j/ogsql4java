@@ -42,33 +42,39 @@ Create a parser instance and parse your first SQL statement:
 import com.sdchat.ogsql.parser.SQLParser;
 import com.sdchat.ogsql.ast.SQLStatement;
 import com.sdchat.ogsql.ast.SelectQuery;
+import com.sdchat.ogsql.exception.ParseException;
 
 // Create parser instance
 SQLParser parser = new SQLParser();
 
 // Parse a simple SQL statement
 String sql = "SELECT id, name, email FROM users WHERE active = true";
-SQLStatement statement = parser.parse(sql);
+try {
+    SQLStatement statement = parser.parse(sql);
 
-// Check statement type and access results
-if (statement instanceof SelectQuery) {
-    SelectQuery select = (SelectQuery) statement;
-    System.out.println("Statement type: " + statement.getStatementType());
-    System.out.println("Columns: " + select.getColumns());
+    // Check statement type and access results
+    if (statement instanceof SelectQuery) {
+        SelectQuery select = (SelectQuery) statement;
+        System.out.println("Statement type: " + statement.getStatementType());
+        System.out.println("FROM clause: " + select.getFromClause());
+    }
+} catch (ParseException e) {
+    System.out.println("Parse error: " + e.getMessage());
 }
 ```
 
 **Expected Output**:
 ```
 Statement type: SELECT
-Columns: [id, name, email]
+FROM clause: FROM users WHERE active = true
 ```
 
 **Explanation**:
 - `SQLParser` is the main entry point for parsing
-- `parse()` method takes a SQL string and returns an `SQLStatement`
+- `parse()` method takes a SQL string and returns an `SQLStatement` (may throw `ParseException`)
 - Use `instanceof` to check the specific statement type
 - Cast to the appropriate type (e.g., `SelectQuery`) to access statement-specific properties
+- Always wrap parse calls in try-catch to handle potential exceptions
 
 ---
 
@@ -82,6 +88,7 @@ import com.sdchat.ogsql.ast.SQLStatement;
 import com.sdchat.ogsql.ast.SelectQuery;
 import com.sdchat.ogsql.ast.InsertStatement;
 import com.sdchat.ogsql.ast.UpdateStatement;
+import com.sdchat.ogsql.exception.ParseException;
 
 SQLParser parser = new SQLParser();
 
@@ -91,28 +98,32 @@ String insertSql = "INSERT INTO users (name, email) VALUES ('John', 'john@exampl
 String updateSql = "UPDATE users SET active = true WHERE id = 1";
 
 // Parse and handle each type
-SQLStatement stmt1 = parser.parse(selectSql);
-if (stmt1 instanceof SelectQuery) {
-    SelectQuery select = (SelectQuery) stmt1;
-    System.out.println("SELECT - Tables: " + select.getTables());
-}
+try {
+    SQLStatement stmt1 = parser.parse(selectSql);
+    if (stmt1 instanceof SelectQuery) {
+        SelectQuery select = (SelectQuery) stmt1;
+        System.out.println("SELECT - FROM clause: " + select.getFromClause());
+    }
 
-SQLStatement stmt2 = parser.parse(insertSql);
-if (stmt2 instanceof InsertStatement) {
-    InsertStatement insert = (InsertStatement) stmt2;
-    System.out.println("INSERT - Table: " + insert.getTableName());
-}
+    SQLStatement stmt2 = parser.parse(insertSql);
+    if (stmt2 instanceof InsertStatement) {
+        InsertStatement insert = (InsertStatement) stmt2;
+        System.out.println("INSERT - Table: " + insert.getTableName());
+    }
 
-SQLStatement stmt3 = parser.parse(updateSql);
-if (stmt3 instanceof UpdateStatement) {
-    UpdateStatement update = (UpdateStatement) stmt3;
-    System.out.println("UPDATE - Table: " + update.getTableName());
+    SQLStatement stmt3 = parser.parse(updateSql);
+    if (stmt3 instanceof UpdateStatement) {
+        UpdateStatement update = (UpdateStatement) stmt3;
+        System.out.println("UPDATE - Table: " + update.getTableName());
+    }
+} catch (ParseException e) {
+    System.out.println("Parse error: " + e.getMessage());
 }
 ```
 
 **Expected Output**:
 ```
-SELECT - Tables: [products]
+SELECT - FROM clause: FROM products WHERE price > 100
 INSERT - Table: users
 UPDATE - Table: users
 ```
@@ -121,6 +132,7 @@ UPDATE - Table: users
 - Different SQL statement types (SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP) return different AST classes
 - Always check the type using `instanceof` before casting
 - Each statement type has specific properties (tables, columns, values, etc.)
+- Wrap parse calls in try-catch to handle potential `ParseException`
 
 ---
 

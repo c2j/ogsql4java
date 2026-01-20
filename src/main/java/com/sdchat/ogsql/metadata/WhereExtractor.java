@@ -22,13 +22,170 @@ public class WhereExtractor {
         if (whereExpr == null) {
             return Collections.emptyList();
         }
-        
-        // Current ValueExpression implementation is minimal
-        // This would need to be enhanced when the AST is more complete
-        
-        return Collections.emptyList();
+
+        List<Condition> conditions = new ArrayList<>();
+        extractConditionsRecursive(whereExpr, conditions, null);
+        return conditions;
     }
-    
+
+    /**
+     * Recursively extracts conditions from a value expression.
+     * 
+     * @param expr The expression to analyze
+     * @param conditions List to collect extracted conditions
+     * @param tableName Default table name (can be null)
+     */
+    private static void extractConditionsRecursive(ValueExpression expr, List<Condition> conditions, String tableName) {
+        if (expr == null) {
+            return;
+        }
+
+        String operator = expr.getOperator();
+
+        // Check if this is a comparison operation
+        if (operator != null && isComparisonOperator(operator)) {
+            String columnName = extractColumnName(expr.getLeftOperand());
+            String value = extractLiteralValue(expr.getRightOperand());
+
+            if (columnName != null) {
+                Condition condition = new Condition(
+                    columnName,
+                    tableName,
+                    operator,
+                    value != null ? value : extractExpressionAsString(expr.getRightOperand()),
+                    expr
+                );
+                conditions.add(condition);
+            }
+        } else {
+            // Recursively process operands
+            if (expr.getLeftOperand() != null) {
+                extractConditionsRecursive(expr.getLeftOperand(), conditions, tableName);
+            }
+            if (expr.getRightOperand() != null) {
+                extractConditionsRecursive(expr.getRightOperand(), conditions, tableName);
+            }
+        }
+    }
+
+    /**
+     * Checks if an operator is a comparison operator.
+     * 
+     * @param operator The operator to check
+     * @return true if it's a comparison operator
+     */
+    private static boolean isComparisonOperator(String operator) {
+        if (operator == null) {
+            return false;
+        }
+        switch (operator) {
+            case "=":
+            case "<":
+            case ">":
+            case "<=":
+            case ">=":
+            case "<>":
+            case "!=":
+            case "LIKE":
+            case "ILIKE":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Extracts column name from a value expression.
+     * 
+     * @param expr The expression to extract from
+     * @return Column name, or null if not a column reference
+     */
+    private static String extractColumnName(ValueExpression expr) {
+        if (expr == null) {
+            return null;
+        }
+        String columnName = expr.getColumnName();
+        if (columnName != null && !columnName.isEmpty()) {
+            return columnName;
+        }
+        return null;
+    }
+
+    /**
+     * Extracts literal value from a value expression.
+     * 
+     * @param expr The expression to extract from
+     * @return Literal value as string, or null if not a literal
+     */
+    private static String extractLiteralValue(ValueExpression expr) {
+        if (expr == null) {
+            return null;
+        }
+        String literalValue = expr.getLiteralValue();
+        if (literalValue != null && !literalValue.isEmpty()) {
+            return literalValue;
+        }
+        return null;
+    }
+
+    /**
+     * Converts a value expression to a string representation.
+     * 
+     * @param expr The expression to convert
+     * @return String representation
+     */
+    private static String extractExpressionAsString(ValueExpression expr) {
+        if (expr == null) {
+            return null;
+        }
+        if (expr.getColumnName() != null) {
+            return expr.getColumnName();
+        }
+        if (expr.getLiteralValue() != null) {
+            return "'" + expr.getLiteralValue() + "'";
+        }
+        if (expr.getFunctionName() != null) {
+            return expr.getFunctionName() + "(...)";
+        }
+        return buildOriginalExpression(expr);
+    }
+
+    /**
+     * Builds the original expression string from a value expression.
+     * 
+     * @param expr The expression to build from
+     * @return Original expression as string
+     */
+    private static String buildOriginalExpression(ValueExpression expr) {
+        if (expr == null) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        if (expr.getLeftOperand() != null) {
+            sb.append(buildOriginalExpression(expr.getLeftOperand()));
+            sb.append(" ");
+        }
+
+        if (expr.getOperator() != null) {
+            sb.append(expr.getOperator());
+            sb.append(" ");
+        }
+
+        if (expr.getColumnName() != null) {
+            sb.append(expr.getColumnName());
+        } else if (expr.getLiteralValue() != null) {
+            sb.append("'").append(expr.getLiteralValue()).append("'");
+        } else if (expr.getFunctionName() != null) {
+            sb.append(expr.getFunctionName()).append("(...)");
+        } else if (expr.getRightOperand() != null) {
+            sb.append(buildOriginalExpression(expr.getRightOperand()));
+        }
+
+        return sb.toString().trim();
+    }
+
     /**
      * Extracts equality conditions from a WHERE expression.
      * 

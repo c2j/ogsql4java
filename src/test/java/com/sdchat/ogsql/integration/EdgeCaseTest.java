@@ -2,6 +2,7 @@ package com.sdchat.ogsql.integration;
 
 import com.sdchat.ogsql.parser.SQLParser;
 import com.sdchat.ogsql.parser.ParseResult;
+import com.sdchat.ogsql.parser.MultiParseResult;
 import com.sdchat.ogsql.ast.SQLStatement;
 import com.sdchat.ogsql.exception.InputValidationException;
 import org.junit.jupiter.api.Test;
@@ -225,8 +226,8 @@ public class EdgeCaseTest {
         };
         
         for (String sql : sqls) {
-            List<SQLStatement> results = parser.parseMultiple(sql);
-            assertTrue(results.size() >= 1, "Should parse at least one statement from: " + sql);
+            MultiParseResult result = parser.parseMultiple(sql);
+            assertTrue(result.getStatements().size() >= 1, "Should parse at least one statement from: " + sql);
         }
     }
     

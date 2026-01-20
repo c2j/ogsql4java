@@ -1,6 +1,7 @@
 package com.sdchat.ogsql.integration;
 
 import com.sdchat.ogsql.parser.SQLParser;
+import com.sdchat.ogsql.parser.MultiParseResult;
 import com.sdchat.ogsql.ast.SQLStatement;
 import com.sdchat.ogsql.ast.CreateStatement;
 import com.sdchat.ogsql.ast.StatementType;
@@ -85,12 +86,12 @@ class PartitionIntegrationTest {
                     "PARTITIONS 2;";
         
         SQLParser parser = new SQLParser();
-        var statements = parser.parseMultiple(sql);
+        MultiParseResult result = parser.parseMultiple(sql);
         
-        assertNotNull(statements);
-        assertEquals(2, statements.size());
+        assertNotNull(result);
+        assertEquals(2, result.getStatements().size());
         
-        for (SQLStatement statement : statements) {
+        for (SQLStatement statement : result.getStatements()) {
             assertNotNull(statement);
             assertInstanceOf(CreateStatement.class, statement);
             CreateStatement createStmt = (CreateStatement) statement;

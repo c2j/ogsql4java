@@ -16,6 +16,15 @@ WS
     : [ \t\r\n]+ -> skip
     ;
 
+// SQL Comments
+LINE_COMMENT
+    : '--' ~[\r\n]* -> skip
+    ;
+
+BLOCK_COMMENT
+    : '/*' .*? '*/' -> skip
+    ;
+
 // Parser Rules
 prog
     : statement* EOF
@@ -27,6 +36,7 @@ statement
     | updateStatement
     | deleteStatement
     | createStatement
+    | createProcedureStatement
     ;
 
 selectStatement
@@ -65,8 +75,31 @@ deleteStatement
     : DELETE FROM identifier (WHERE expression)? SEMICOLON
     ;
 
+createProcedureStatement
+    : CREATE (OR REPLACE)? PROCEDURE identifier LPAREN parameterList? RPAREN (LANGUAGE identifier)? (SECURITY DEFINER)? AS dollarString SEMICOLON?
+    ;
+
+dollarString
+    : '$$' (~'$'? | '$' ~'$')* '$$'
+    ;
+
+parameterList
+    : parameterDef (COMMA parameterDef)*
+    ;
+
+parameterDef
+    : identifier (IN | OUT | INOUT)? dataType (DEFAULT literal)?
+    ;
+
+dataType
+    : identifier
+    | identifier LPAREN NUMBER RPAREN
+    | identifier LPAREN NUMBER COMMA NUMBER RPAREN
+    ;
+
 createStatement
     : CREATE TABLE identifier LPAREN columnDefList RPAREN SEMICOLON
+    | createProcedureStatement
     ;
 
 columnDefList
@@ -77,14 +110,48 @@ columnDef
     : identifier (NOT NULL)? (DEFAULT literal)?
     ;
 
-expression
+expr
+    : logicalOrExpr
+    ;
+
+logicalOrExpr
+    : logicalOrExpr OR logicalAndExpr
+    | logicalAndExpr
+    ;
+
+logicalAndExpr
+    : logicalAndExpr AND notExpr
+    | notExpr
+    ;
+
+notExpr
+    : NOT notExpr
+    | comparisonExpr
+    ;
+
+comparisonExpr
+    : comparisonExpr (EQ | LT | GT | LE | GE | NE) additiveExpr
+    | additiveExpr
+    ;
+
+additiveExpr
+    : additiveExpr (PLUS | MINUS) multiplicativeExpr
+    | multiplicativeExpr
+    ;
+
+multiplicativeExpr
+    : multiplicativeExpr (STAR | SLASH) primaryExpr
+    | primaryExpr
+    ;
+
+primaryExpr
     : literal
     | identifier
-    | expression PLUS expression
-    | expression MINUS expression
-    | expression STAR expression
-    | expression SLASH expression
-    | LPAREN expression RPAREN
+    | LPAREN expr RPAREN
+    ;
+
+expression
+    : expr
     ;
 
 valueExpression
@@ -120,6 +187,14 @@ SET: 'SET';
 DELETE: 'DELETE';
 CREATE: 'CREATE';
 TABLE: 'TABLE';
+PROCEDURE: 'PROCEDURE';
+REPLACE: 'REPLACE';
+IN: 'IN';
+OUT: 'OUT';
+INOUT: 'INOUT';
+LANGUAGE: 'LANGUAGE';
+SECURITY: 'SECURITY';
+DEFINER: 'DEFINER';
 DISTINCT: 'DISTINCT';
 GROUP: 'GROUP';
 BY: 'BY';

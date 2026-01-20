@@ -145,9 +145,11 @@ Get all tables referenced in a query:
 
 ```java
 // See MetadataExtractionExamples.java for complete code
+import com.sdchat.ogsql.metadata.MetadataExtractor;
+
 MetadataExtractor extractor = new MetadataExtractor();
 extractor.extract(statement);
-List<String> tables = extractor.getTables();
+java.util.Set<String> tables = extractor.getTables();
 ```
 
 ### Columns Extraction
@@ -155,7 +157,7 @@ List<String> tables = extractor.getTables();
 Get all columns in SELECT statement:
 
 ```java
-List<Column> columns = extractor.getColumns();
+java.util.Set<Column> columns = extractor.getColumns();
 ```
 
 ### Functions Extraction
@@ -163,7 +165,7 @@ List<Column> columns = extractor.getColumns();
 Identify all function calls:
 
 ```java
-List<FunctionCall> functions = extractor.getFunctions();
+java.util.Set<FunctionCall> functions = extractor.getFunctions();
 ```
 
 ### WHERE Conditions Extraction

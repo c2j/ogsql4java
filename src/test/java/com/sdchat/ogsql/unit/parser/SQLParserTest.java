@@ -1,6 +1,7 @@
 package com.sdchat.ogsql.unit.parser;
 
 import com.sdchat.ogsql.parser.SQLParser;
+import com.sdchat.ogsql.parser.MultiParseResult;
 import com.sdchat.ogsql.ast.SQLStatement;
 import com.sdchat.ogsql.exception.ParseException;
 import org.junit.jupiter.api.Test;
@@ -46,20 +47,22 @@ class SQLParserTest {
     void testParseMultipleReturnsEmptyListForNull() {
         SQLParser parser = new SQLParser();
 
-        var statements = parser.parseMultiple(null);
+        MultiParseResult result = parser.parseMultiple(null);
 
-        assertNotNull(statements);
-        assertEquals(0, statements.size());
+        assertNotNull(result);
+        assertEquals(0, result.getStatements().size());
+        assertFalse(result.hasErrors());
     }
 
     @Test
     void testParseMultipleReturnsEmptyListForEmpty() {
         SQLParser parser = new SQLParser();
 
-        var statements = parser.parseMultiple("");
+        MultiParseResult result = parser.parseMultiple("");
 
-        assertNotNull(statements);
-        assertEquals(0, statements.size());
+        assertNotNull(result);
+        assertEquals(0, result.getStatements().size());
+        assertFalse(result.hasErrors());
     }
 
     @Test
@@ -67,9 +70,10 @@ class SQLParserTest {
         String sql = "SELECT id FROM users; INSERT INTO users VALUES (1);";
         SQLParser parser = new SQLParser();
 
-        var statements = parser.parseMultiple(sql);
+        MultiParseResult result = parser.parseMultiple(sql);
 
-        assertNotNull(statements);
-        assertEquals(2, statements.size());
+        assertNotNull(result);
+        assertEquals(2, result.getStatements().size());
+        assertFalse(result.hasErrors());
     }
 }

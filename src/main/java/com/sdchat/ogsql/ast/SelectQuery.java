@@ -2,6 +2,7 @@ package com.sdchat.ogsql.ast;
 
 import com.sdchat.ogsql.visitor.ASTVisitor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class SelectQuery implements SQLStatement {
@@ -23,7 +24,11 @@ public class SelectQuery implements SQLStatement {
     }
 
     public List<DataSource> getDataSources() {
-        return dataSources;
+        return Collections.unmodifiableList(dataSources);
+    }
+
+    public boolean hasDataSources() {
+        return !dataSources.isEmpty();
     }
 
     public void setDataSources(List<DataSource> dataSources) {
@@ -37,7 +42,11 @@ public class SelectQuery implements SQLStatement {
     }
 
     public List<PerformanceHint> getHints() {
-        return hints;
+        return Collections.unmodifiableList(hints);
+    }
+
+    public boolean hasHints() {
+        return !hints.isEmpty();
     }
 
     public void setHints(List<PerformanceHint> hints) {
@@ -57,6 +66,6 @@ public class SelectQuery implements SQLStatement {
 
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visit(this);
+        return visitor.visitSelectQuery(this);
     }
 }

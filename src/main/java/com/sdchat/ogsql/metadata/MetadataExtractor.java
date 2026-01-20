@@ -14,6 +14,7 @@ import java.util.*;
 public class MetadataExtractor implements ASTVisitor<Void> {
 
     private Set<String> tables = new HashSet<>();
+    private Set<String> procedures = new HashSet<>();
     private Set<ColumnReference> columns = new HashSet<>();
     private Set<FunctionCall> functions = new HashSet<>();
     private Set<Condition> whereConditions = new HashSet<>();
@@ -43,13 +44,14 @@ public class MetadataExtractor implements ASTVisitor<Void> {
      */
     private void reset() {
         tables.clear();
+        procedures.clear();
         columns.clear();
         functions.clear();
         whereConditions.clear();
     }
 
     /**
-     * Gets the extracted table names.
+     * Gets extracted table names.
      * 
      * @return Set of table names
      */
@@ -58,16 +60,16 @@ public class MetadataExtractor implements ASTVisitor<Void> {
     }
 
     /**
-     * Gets the extracted column references.
+     * Gets extracted procedure names.
      * 
-     * @return Set of column references
+     * @return Set of procedure names
      */
-    public Set<ColumnReference> getColumns() {
-        return new HashSet<>(columns);
+    public Set<String> getProcedures() {
+        return new HashSet<>(procedures);
     }
 
     /**
-     * Gets the extracted function calls.
+     * Gets extracted function calls.
      * 
      * @return Set of function calls
      */
@@ -85,7 +87,7 @@ public class MetadataExtractor implements ASTVisitor<Void> {
     }
 
     @Override
-    public Void visit(SelectQuery query) {
+    public Void visitSelectQuery(SelectQuery query) {
         if (query == null) return null;
 
         // P2 optimization: Structured dataSources available
@@ -106,7 +108,7 @@ public class MetadataExtractor implements ASTVisitor<Void> {
     }
 
     @Override
-    public Void visit(CreateStatement statement) {
+    public Void visitCreateStatement(CreateStatement statement) {
         if (statement == null) return null;
 
         // Extract table name
@@ -125,53 +127,93 @@ public class MetadataExtractor implements ASTVisitor<Void> {
     }
 
     @Override
-    public Void visit(InsertStatement statement) {
+    public Void visitCreateProcedureStmt(CreateProcedureStmt statement) {
         if (statement == null) return null;
 
-        // Current InsertStatement implementation is minimal
-        // This would need to be enhanced when AST is more complete
+        // Extract procedure name
+        if (statement.getProcedureName() != null) {
+            procedures.add(statement.getProcedureName());
+        }
 
         return null;
     }
 
     @Override
-    public Void visit(UpdateStatement statement) {
+    public Void visitInsertStatement(InsertStatement statement) {
         if (statement == null) return null;
 
-        // Current UpdateStatement implementation is minimal
-        // This would need to be enhanced when AST is more complete
+        if (statement.getTableName() != null) {
+            tables.add(statement.getTableName());
+        }
 
         return null;
     }
 
     @Override
-    public Void visit(DeleteStatement statement) {
+    public Void visitUpdateStatement(UpdateStatement statement) {
         if (statement == null) return null;
 
-        // Current DeleteStatement implementation is minimal
-        // This would need to be enhanced when AST is more complete
+        if (statement.getTableName() != null) {
+            tables.add(statement.getTableName());
+        }
 
         return null;
     }
 
     @Override
-    public Void visit(AlterStatement statement) {
+    public Void visitDeleteStatement(DeleteStatement statement) {
+        if (statement == null) return null;
+
+        if (statement.getTableName() != null) {
+            tables.add(statement.getTableName());
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitAlterStatement(AlterStatement statement) {
         // ALTER statements can reference tables but implementation depends on specific ALTER type
         return null;
     }
 
     @Override
-    public Void visit(DropStatement statement) {
+    public Void visitAlterProcedureStmt(AlterProcedureStmt statement) {
         if (statement == null) return null;
 
-        // Current DropStatement implementation is minimal
-        // This would need to be enhanced when AST is more complete
+        // Extract procedure name
+        if (statement.getProcedureName() != null) {
+            procedures.add(statement.getProcedureName());
+        }
 
         return null;
     }
 
     @Override
-    public Void visit(ExternalTable externalTable) {
+    public Void visitDropStatement(DropStatement statement) {
+        if (statement == null) return null;
+
+        if (statement.getObjectName() != null) {
+            tables.add(statement.getObjectName());
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitCallFuncStmt(CallFuncStmt statement) {
+        if (statement == null) return null;
+
+        // Extract procedure name
+        if (statement.getProcedureName() != null) {
+            procedures.add(statement.getProcedureName());
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitExternalTable(ExternalTable externalTable) {
         if (externalTable == null) return null;
 
         // Extract foreign table name
@@ -190,13 +232,13 @@ public class MetadataExtractor implements ASTVisitor<Void> {
     }
 
     @Override
-    public Void visit(PartitioningInformation partitioning) {
+    public Void visitPartitioningInformation(PartitioningInformation partitioning) {
         // Partitioning information doesn't directly reference additional tables/columns
         return null;
     }
 
     @Override
-    public Void visit(PartitionDefinition partition) {
+    public Void visitPartitionDefinition(PartitionDefinition partition) {
         // Partition definitions don't directly reference additional tables/columns
         return null;
     }
@@ -217,7 +259,6 @@ public class MetadataExtractor implements ASTVisitor<Void> {
         StringBuilder result = new StringBuilder();
         int parenLevel = 0;
         boolean inOnOrUsingClause = false;
-        boolean inAsKeyword = false;
 
         for (int i = 0; i < fromClause.length(); i++) {
             char c = fromClause.charAt(i);
@@ -294,8 +335,8 @@ public class MetadataExtractor implements ASTVisitor<Void> {
 
                 // Check for AS keyword
                 if (i + 3 <= fromClause.length() && fromClause.substring(i, i + 3).equalsIgnoreCase("AS ")) {
-                    inAsKeyword = true;
-                    i += 2;
+                    inOnOrUsingClause = true;
+                    i += 3;
                     continue;
                 }
 
@@ -329,13 +370,14 @@ public class MetadataExtractor implements ASTVisitor<Void> {
             }
         }
 
-        // Now extract table names from the normalized result
+        // Extract table names from the normalized result
         String normalized = result.toString();
         String[] tokens = normalized.split(",");
         for (String token : tokens) {
             token = token.trim();
             if (!token.isEmpty()) {
                 // Extract first word (table name) before any alias
+                // This handles schema-qualified names (e.g., schema.table)
                 String[] parts = token.split("\\s+");
                 if (parts.length > 0 && !parts[0].isEmpty()) {
                     tables.add(parts[0]);
@@ -369,7 +411,7 @@ public class MetadataExtractor implements ASTVisitor<Void> {
 
     /**
      * Extracts table names from a subquery (text inside parentheses).
-     * This is a simplified extraction that looks for FROM clause patterns.
+     * Handles multiple tables, JOINs, and schema-qualified names.
      *
      * @param fromClause The full FROM clause string
      * @param startIndex The index where opening parenthesis was found
@@ -389,27 +431,126 @@ public class MetadataExtractor implements ASTVisitor<Void> {
         String subqueryContent = fromClause.substring(startIndex + 1, endIndex);
 
         // Look for "FROM" keyword in subquery to extract table names
-        // This is a simplified approach - a full solution would parse the subquery recursively
         String upperContent = subqueryContent.toUpperCase();
         int fromIndex = upperContent.indexOf(" FROM ");
 
         if (fromIndex > 0) {
-            // Extract the table name after "FROM"
-            int nameStart = fromIndex + 5;
-            int nameEnd = nameStart;
+            // Extract the FROM clause portion after "FROM"
+            int fromClauseStart = fromIndex + 6;
+            String subFromClause = subqueryContent.substring(fromClauseStart);
 
-            // Find the end of the table name (space, comma, or closing parenthesis)
-            while (nameEnd < subqueryContent.length()) {
-                char c = subqueryContent.charAt(nameEnd);
-                if (c == ' ' || c == ',' || nameEnd == subqueryContent.length() - 1) {
-                    break;
+            // Extract table names from the subquery's FROM clause
+            extractTableNamesFromClause(subFromClause);
+        }
+    }
+
+    /**
+     * Extracts table names from a FROM clause string.
+     * Handles comma-separated tables, JOINs, and schema-qualified names.
+     *
+     * @param fromClause The FROM clause string
+     */
+    private void extractTableNamesFromClause(String fromClause) {
+        if (fromClause == null || fromClause.trim().isEmpty()) {
+            return;
+        }
+
+        String normalized = fromClause.trim();
+        StringBuilder result = new StringBuilder();
+        int parenLevel = 0;
+
+        for (int i = 0; i < normalized.length(); i++) {
+            char c = normalized.charAt(i);
+
+            if (c == '(') {
+                parenLevel++;
+                // Skip subqueries and function calls
+                int startLevel = parenLevel;
+                int nestedLevel = 1;
+                i++;
+                while (i < normalized.length() && nestedLevel > 0) {
+                    if (normalized.charAt(i) == '(') nestedLevel++;
+                    else if (normalized.charAt(i) == ')') nestedLevel--;
+                    i++;
                 }
-                nameEnd++;
+                i--;
+                continue;
+            } else if (c == ')') {
+                parenLevel--;
+                continue;
             }
 
-            String tableName = subqueryContent.substring(nameStart, nameEnd).trim();
-            if (!tableName.isEmpty() && !tableName.toUpperCase().startsWith("SELECT")) {
-                tables.add(tableName);
+            // Skip JOIN keywords and related clauses
+            if (i <= normalized.length() - 6) {
+                String sixChars = normalized.substring(i, Math.min(i + 6, normalized.length()));
+                if (sixChars.equalsIgnoreCase("LEFT ") ||
+                    sixChars.equalsIgnoreCase("RIGHT ") ||
+                    sixChars.equalsIgnoreCase("FULL ")) {
+                    i += 5;
+                    continue;
+                }
+            }
+
+            if (i <= normalized.length() - 6 && normalized.substring(i, Math.min(i + 6, normalized.length())).equalsIgnoreCase("OUTER")) {
+                i += 5;
+                continue;
+            }
+
+            if (i <= normalized.length() - 6 && normalized.substring(i, Math.min(i + 6, normalized.length())).equalsIgnoreCase("INNER")) {
+                i += 5;
+                continue;
+            }
+
+            if (i <= normalized.length() - 6 && normalized.substring(i, Math.min(i + 6, normalized.length())).equalsIgnoreCase("CROSS")) {
+                i += 5;
+                continue;
+            }
+
+            if (i <= normalized.length() - 5 && normalized.substring(i, Math.min(i + 5, normalized.length())).equalsIgnoreCase("JOIN ")) {
+                i += 4;
+                continue;
+            }
+
+            // Skip AS keyword
+            if (i + 3 <= normalized.length() && normalized.substring(i, i + 3).equalsIgnoreCase("AS ")) {
+                i += 3;
+                continue;
+            }
+
+            // Skip ON and USING clauses
+            if (i + 3 <= normalized.length() && normalized.substring(i, i + 3).equalsIgnoreCase("ON ")) {
+                // Skip until next comma or end
+                i += 2;
+                while (i < normalized.length() && normalized.charAt(i) != ',') {
+                    i++;
+                }
+                continue;
+            }
+
+            if (i + 6 <= normalized.length() && normalized.substring(i, i + 6).equalsIgnoreCase("USING ")) {
+                // Skip until next comma or end
+                i += 5;
+                while (i < normalized.length() && normalized.charAt(i) != ',') {
+                    i++;
+                }
+                continue;
+            }
+
+            // Keep characters for table name extraction
+            result.append(c);
+        }
+
+        // Split by commas and extract table names
+        String[] tokens = result.toString().split(",");
+        for (String token : tokens) {
+            token = token.trim();
+            if (!token.isEmpty()) {
+                // Extract first word (table name) before any alias
+                String[] parts = token.split("\\s+");
+                if (parts.length > 0 && !parts[0].isEmpty()) {
+                    // Handle schema-qualified names (schema.table)
+                    tables.add(parts[0]);
+                }
             }
         }
     }
@@ -437,6 +578,7 @@ public class MetadataExtractor implements ASTVisitor<Void> {
         StringBuilder sb = new StringBuilder();
         sb.append("Metadata Summary:\n");
         sb.append("  Tables: ").append(tables.size()).append(" (").append(tables).append(")\n");
+        sb.append("  Procedures: ").append(procedures.size()).append(" (").append(procedures).append(")\n");
         sb.append("  Columns: ").append(columns.size()).append("\n");
         sb.append("  Functions: ").append(functions.size()).append(" (").append(functions).append(")\n");
         sb.append("  WHERE Conditions: ").append(whereConditions.size()).append("\n");

@@ -1,6 +1,7 @@
 package com.sdchat.ogsql.ast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -57,7 +58,7 @@ public class PartitioningInformation {
      * @return The list of partition keys
      */
     public List<String> getPartitionKeys() {
-        return partitionKeys;
+        return Collections.unmodifiableList(partitionKeys);
     }
 
     /**
@@ -90,7 +91,7 @@ public class PartitioningInformation {
      * @return The list of partition definitions
      */
     public List<PartitionDefinition> getPartitions() {
-        return partitions;
+        return Collections.unmodifiableList(partitions);
     }
 
     /**

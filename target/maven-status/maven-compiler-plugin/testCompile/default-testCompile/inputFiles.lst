@@ -5,6 +5,7 @@
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/contract/ForeignTableColumnTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/contract/ForeignTableTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/contract/GrammarSetupTest.java
+/Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/contract/GrammarTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/contract/HashPartitionTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/contract/HintParseTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/contract/InsertParseTest.java
@@ -30,10 +31,16 @@
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/integration/ParseWorkflowTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/integration/PartitionIntegrationTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/integration/PerformanceBenchmarkTest.java
+/Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/integration/ProcedureIntegrationTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/integration/SimpleForeignTableIntegrationTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/test/BasicHintTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/test/MultiTableHintTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/test/SimpleHintTest.java
+/Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/unit/ast/CallFuncStmtTest.java
+/Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/unit/ast/CreateProcedureStmtTest.java
+/Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/unit/ast/ProcedureBodyTest.java
+/Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/unit/ast/ProcedureParameterTest.java
+/Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/unit/ast/ProcedureSecurityTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/unit/exception/ErrorSeverityTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/unit/exception/InputValidationExceptionTest.java
 /Volumes/Raiden_C2J/Projects/Desktop_Projects/DB/ogsql4java/src/test/java/com/sdchat/ogsql/unit/exception/ParseExceptionTest.java

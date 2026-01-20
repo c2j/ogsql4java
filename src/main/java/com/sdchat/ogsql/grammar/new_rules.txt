@@ -1,0 +1,147 @@
+
+// ==================== Procedure Statements ====================
+
+// Procedure statement (CREATE, ALTER, DROP, CALL)
+procedureStatement
+    : createProcedure
+    | alterProcedure
+    | dropProcedure
+    | callStatement
+    ;
+
+// CREATE PROCEDURE statement
+createProcedure
+    : CREATE (OR REPLACE)? PROCEDURE qualifiedName '(' procedureParameterList? ')'
+      ( LANGUAGE identifier )?
+      ( procedureSecurity )?
+      ( AS | IS ) dollarString
+    ;
+
+// ALTER PROCEDURE statement
+alterProcedure
+    : ALTER PROCEDURE qualifiedName
+      ( RENAME TO qualifiedName
+      | OWNER TO identifier
+      | SET SCHEMA identifier
+      | ( NO )? DEPENDS ON EXTENSION identifier
+      | ( NO )? SECURITY INVOKER
+    ;
+
+// DROP PROCEDURE statement
+dropProcedure
+    : DROP PROCEDURE ( IF EXISTS )? qualifiedName (',' qualifiedName)*
+      ( CASCADE | RESTRICT )?
+    ;
+
+// CALL statement
+callStatement
+    : CALL qualifiedName '(' ( argumentExpression (',' argumentExpression)* ')'
+    ;
+
+// ==================== Procedure Components ====================
+
+// Procedure parameter list
+procedureParameterList
+    : procedureParameter (',' procedureParameter)*
+    ;
+
+// Procedure parameter
+procedureParameter
+    : ( IN | OUT | INOUT | VARIADIC )? identifier dataType ( DEFAULT expression)?
+    ;
+
+// Procedure security attributes
+procedureSecurity
+    : SECURITY ( INVOKER | DEFINER )
+    | AUTHID ( DEFINER | CURRENT_USER )
+    ;
+
+// Procedure body
+procedureBody
+    : dollarString
+    ;
+
+// ==================== Procedural Language ====================
+
+// Procedural block (BEGIN/END with DECLARE section)
+proceduralBlock
+    : ( DECLARE variableDeclarationList )? BEGIN proceduralStatement* ( EXCEPTION exceptionHandlerList* )? END
+    ;
+
+// Variable declaration in DECLARE section
+variableDeclaration
+    : identifier (DEFAULT expression)?
+    ;
+
+// Procedural statement types
+proceduralStatement
+    : ifStatement
+    | loopStatement
+    | forStatement
+    | whileStatement
+    | returnStatement
+    | variableAssignmentStatement
+    | raiseStatement
+    | nullStatement
+    ;
+
+// IF statement
+ifStatement
+    : IF expression THEN proceduralStatement* ELSE proceduralStatement*? END IF
+    ;
+
+// LOOP statement
+loopStatement
+    : LOOP label? proceduralStatement* END LOOP
+    ;
+
+// FOR statement
+forStatement
+    : FOR identifier IN rangeClause loopStatement
+    ;
+
+// WHILE statement
+whileStatement
+    : WHILE expression DO proceduralStatement* END LOOP
+    ;
+
+// Variable assignment
+variableAssignmentStatement
+    : identifier ':=' expression ';'
+    ;
+
+// RETURN statement
+returnStatement
+    : RETURN (expression | NEXT expression)?
+    ;
+
+// RAISE statement
+raiseStatement
+    : RAISE exceptionLevel ';'
+    ;
+
+// NULL statement
+nullStatement
+    : NULL ';'
+    ;
+
+// Range clause for FOR loop
+rangeClause
+    : identifier expression? TO expression
+    ;
+
+// Exception handler
+exceptionHandler
+    : WHEN exceptionCondition (OR exceptionCondition)* THEN proceduralStatement*
+    ;
+
+// Exception condition
+exceptionCondition
+    : identifier
+    ;
+
+// ==================== SELECT Statement ====================
+
+selectstmt
+    : SELECT hintComment? optdistinct selectlist fromclause whereclause groupbyclause havingclause orderbyclause limitclause
+    ;

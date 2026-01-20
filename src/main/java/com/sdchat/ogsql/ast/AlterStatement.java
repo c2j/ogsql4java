@@ -2,6 +2,7 @@ package com.sdchat.ogsql.ast;
 
 import com.sdchat.ogsql.visitor.ASTVisitor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class AlterStatement implements SQLStatement {
@@ -16,7 +17,7 @@ public class AlterStatement implements SQLStatement {
 
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visit(this);
+        return visitor.visitAlterStatement(this);
     }
 
     public String getObjectType() {
@@ -35,7 +36,25 @@ public class AlterStatement implements SQLStatement {
         this.objectName = objectName;
     }
 
+    /**
+     * Adds an alter command to the list of alter commands.
+     *
+     * @param command the alter command to add, cannot be null or empty
+     * @throws IllegalArgumentException if the command is null or empty
+     */
+    public void addAlterCommand(String command) {
+        if (command == null || command.trim().isEmpty()) {
+            throw new IllegalArgumentException("Alter command cannot be null or empty");
+        }
+        if (alterCommands == null) {
+            alterCommands = new ArrayList<>();
+        }
+        AlterCommand alterCommand = new AlterCommand();
+        alterCommand.setDefinition(command);
+        alterCommands.add(alterCommand);
+    }
+
     public List<AlterCommand> getAlterCommands() {
-        return alterCommands;
+        return Collections.unmodifiableList(alterCommands);
     }
 }

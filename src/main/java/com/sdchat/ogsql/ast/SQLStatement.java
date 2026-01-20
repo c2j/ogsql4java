@@ -1,5 +1,6 @@
 package com.sdchat.ogsql.ast;
 
+import com.sdchat.ogsql.ast.StatementType;
 import com.sdchat.ogsql.visitor.ASTVisitor;
 
 /**

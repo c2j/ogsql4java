@@ -118,11 +118,36 @@ public class SQLParser {
         
         try {
             SQLStatement statement = parse(sql);
+            if (statement == null) {
+                ParsingError error = new ParsingError("No valid SQL statement found", 0, 0, com.sdchat.ogsql.exception.ErrorSeverity.ERROR);
+                return new ParseResult(error);
+            }
             return new ParseResult(statement);
         } catch (Exception e) {
-            ParsingError error = new ParsingError(e.getMessage(), 0, 0, com.sdchat.ogsql.exception.ErrorSeverity.ERROR);
+            ParsingError error = extractErrorInfo(e);
             return new ParseResult(error);
         }
+    }
+    
+    private ParsingError extractErrorInfo(Exception e) {
+        int line = 0;
+        int column = 0;
+        String context = null;
+        String suggestion = null;
+        
+        if (e instanceof com.sdchat.ogsql.exception.SyntaxErrorException) {
+            com.sdchat.ogsql.exception.SyntaxErrorException see = (com.sdchat.ogsql.exception.SyntaxErrorException) e;
+            line = see.getLine();
+            column = see.getColumn();
+            context = see.getContext();
+            suggestion = see.getSuggestion();
+        } else if (e instanceof com.sdchat.ogsql.exception.SemanticErrorException) {
+            com.sdchat.ogsql.exception.SemanticErrorException see = (com.sdchat.ogsql.exception.SemanticErrorException) e;
+            line = see.getLine();
+            context = see.getContext();
+        }
+        
+        return new ParsingError(e.getMessage(), line, column, com.sdchat.ogsql.exception.ErrorSeverity.ERROR, context, suggestion);
     }
     
     /**
@@ -162,7 +187,7 @@ public class SQLParser {
         String trimmedSql = sql.trim();
         if (trimmedSql.startsWith("--") || (trimmedSql.startsWith("/*") && trimmedSql.contains("*/"))) {
             // For comment-only input, return a simple placeholder statement
-            return new com.sdchat.ogsql.ast.SelectQuery(); // Return empty SELECT as placeholder
+            return new com.sdchat.ogsql.ast.SelectQuery();
         }
 
         CharStream input = CharStreams.fromString(sql);
@@ -197,17 +222,18 @@ public class SQLParser {
         }
     }
     
-    public List<SQLStatement> parseMultiple(String sql) {
+    public MultiParseResult parseMultiple(String sql) {
         if (sql == null) {
-            return new ArrayList<>(); // Return empty list for null input
+            return new MultiParseResult(new ArrayList<>(), new ArrayList<>());
         }
         
         String trimmed = sql.trim();
         if (trimmed.isEmpty()) {
-            return new ArrayList<>(); // Return empty list for empty input
+            return new MultiParseResult(new ArrayList<>(), new ArrayList<>());
         }
 
         List<SQLStatement> statements = new ArrayList<>();
+        List<com.sdchat.ogsql.exception.ParseException> errors = new ArrayList<>();
         String[] individualStatements = sql.split(";");
         
         for (String statement : individualStatements) {
@@ -218,14 +244,13 @@ public class SQLParser {
                     if (parsedStatement != null) {
                         statements.add(parsedStatement);
                     }
-                } catch (Exception e) {
-                    // Continue parsing other statements even if one fails
-                    // In a production system, you might want to collect errors
+                } catch (com.sdchat.ogsql.exception.ParseException e) {
+                    errors.add(e);
                 }
             }
         }
         
-        return statements;
+        return new MultiParseResult(statements, errors);
     }
     
     private boolean isCommentOnly(String sql) {

@@ -152,9 +152,10 @@ Developers need to support DROP PROCEDURE commands to remove stored procedures f
   - Support control flow statements (IF, LOOP, etc.) within procedures
 
 - **FR-011**: System MUST validate Gauss-specific procedure syntax extensions
-  - Support Gauss DB specific features if present in reference grammar
-  - Handle compatibility modes (A, B, C, PG, D)
-  - Maintain backward compatibility with existing SQL parsing
+   - Support Gauss DB specific features if present in reference grammar
+   - Support procedure-level compatibility modes (A, B, C, PG, D) via SET clauses
+   - Maintain backward compatibility with existing SQL parsing
+   - **Note**: Compatibility modes apply at procedure level, distinct from parameter modes (IN/OUT/INOUT/VARIADIC)
 
 ## Success Criteria
 

@@ -12,5 +12,8 @@ public enum StatementType {
     ALTER_TABLE,
     DROP_TABLE,
     CREATE_FOREIGN_TABLE,
+    CREATE_PROCEDURE,
+    ALTER_PROCEDURE,
+    CALL_PROCEDURE,
     UNKNOWN
 }

@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Stored Procedure Parsing support (003-gauss-procedure-parsing)
+  - ✅ CREATE PROCEDURE statement parsing with parameters, security attributes, and body
+  - ✅ ALTER PROCEDURE statement parsing for RENAME, OWNER, SET SCHEMA, SECURITY modifications
+  - ✅ CALL statement parsing with positional and named parameter support
+  - ✅ DROP PROCEDURE statement parsing with IF EXISTS and CASCADE options
+  - ✅ Procedure parameter parsing with modes (IN, OUT, INOUT, VARIADIC) and default values
+  - ✅ Procedure body parsing with PL/pgSQL support (DECLARE, BEGIN/END blocks, control flow)
+  - ✅ Argument style exclusivity validation (cannot mix positional and named arguments)
+  - ✅ New AST nodes: CreateProcedureStmt, AlterProcedureStmt, CallFuncStmt
+  - ✅ Extended ASTVisitor with visit methods for procedure statements
+  - ✅ Unit tests for all procedure AST nodes
+  - ✅ Integration tests for procedure parsing scenarios
+
 - Initial implementation of OpenGauss SQL Parser
 - ANTLR4-based grammar with PostgreSQL foundation
 - Support for basic SQL statements: SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP

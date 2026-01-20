@@ -3,6 +3,7 @@ package com.sdchat.ogsql.unit.exception;
 import com.sdchat.ogsql.exception.ParseException;
 import com.sdchat.ogsql.exception.SemanticErrorException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -17,18 +18,18 @@ class SemanticErrorExceptionTest {
         SemanticErrorException exception = new SemanticErrorException(message);
 
         assertEquals(message, exception.getMessage());
-        assertNull(exception.getQueryPart());
+        assertNull(exception.getSemanticIssue());
     }
 
     @Test
-    void testSemanticErrorWithQueryPart() {
+    void testSemanticErrorWithSemanticIssue() {
         String message = "Invalid partition type";
-        String queryPart = "PARTITION BY XYZ";
+        String semanticIssue = "Partition type XYZ not supported";
 
-        SemanticErrorException exception = new SemanticErrorException(message, queryPart);
+        SemanticErrorException exception = new SemanticErrorException(message, semanticIssue);
 
         assertEquals(message, exception.getMessage());
-        assertEquals(queryPart, exception.getQueryPart());
+        assertEquals(semanticIssue, exception.getSemanticIssue());
     }
 
     @Test

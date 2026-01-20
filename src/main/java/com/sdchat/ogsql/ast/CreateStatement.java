@@ -2,6 +2,7 @@ package com.sdchat.ogsql.ast;
 
 import com.sdchat.ogsql.visitor.ASTVisitor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -22,7 +23,7 @@ public class CreateStatement implements SQLStatement {
 
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visit(this);
+        return visitor.visitCreateStatement(this);
     }
 
     /**
@@ -73,7 +74,11 @@ public class CreateStatement implements SQLStatement {
      * @return The list of columns
      */
     public List<Column> getColumns() {
-        return columns;
+        return Collections.unmodifiableList(columns);
+    }
+
+    public boolean hasColumns() {
+        return !columns.isEmpty();
     }
 
     /**
@@ -106,7 +111,11 @@ public class CreateStatement implements SQLStatement {
      * @return The list of constraints
      */
     public List<Constraint> getConstraints() {
-        return constraints;
+        return Collections.unmodifiableList(constraints);
+    }
+
+    public boolean hasConstraints() {
+        return !constraints.isEmpty();
     }
 
     /**

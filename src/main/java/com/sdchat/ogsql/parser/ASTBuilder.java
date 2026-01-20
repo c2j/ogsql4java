@@ -2,6 +2,9 @@ package com.sdchat.ogsql.parser;
 
 import com.sdchat.ogsql.grammar.*;
 import com.sdchat.ogsql.ast.*;
+import com.sdchat.ogsql.exception.SemanticErrorException;
+import com.sdchat.ogsql.exception.SyntaxErrorException;
+import com.sdchat.ogsql.exception.InputValidationException;
 import org.antlr.v4.runtime.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -38,10 +41,16 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
             return visitDeletestmt(ctx.deletestmt());
         } else if (ctx.createstmt() != null) {
             return visitCreatestmt(ctx.createstmt());
-        } else if (ctx.dropstmt() != null) {
-            return visitDropstmt(ctx.dropstmt());
+        } else if (ctx.createprocedurestmt() != null) {
+            return visitCreateprocedurestmt(ctx.createprocedurestmt());
+        } else if (ctx.alterprocedurestmt() != null) {
+            return visitAlterprocedurestmt(ctx.alterprocedurestmt());
         } else if (ctx.alterstmt() != null) {
             return visitAlterstmt(ctx.alterstmt());
+        } else if (ctx.dropstmt() != null) {
+            return visitDropstmt(ctx.dropstmt());
+        } else if (ctx.callstmt() != null) {
+            return visitCallstmt(ctx.callstmt());
         }
         return null;
     }
@@ -314,7 +323,21 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
 
     @Override
     public SQLStatement visitDropstmt(OpenGaussSQLParser.DropstmtContext ctx) {
+        if (ctx == null || ctx.IDENTIFIER() == null) {
+            return null;
+        }
+
         DropStatement stmt = new DropStatement();
+        stmt.setObjectName(ctx.IDENTIFIER().getText());
+
+        if (ctx.IF() != null && ctx.EXISTS() != null) {
+            stmt.setIfExists(true);
+        }
+
+        if (ctx.CASCADE() != null) {
+            stmt.setCascade(true);
+        }
+
         return stmt;
     }
 
@@ -663,8 +686,146 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
         }
     }
 
+    @Override
+    public SQLStatement visitCreateprocedurestmt(OpenGaussSQLParser.CreateprocedurestmtContext ctx) {
+        if (ctx == null || ctx.IDENTIFIER().isEmpty()) {
+            return null;
+        }
+
+        String procedureName = ctx.IDENTIFIER(0).getText();
+        boolean orReplace = ctx.OR() != null && ctx.REPLACE() != null;
+
+        CreateProcedureStmt stmt = new CreateProcedureStmt(procedureName, orReplace);
+
+        if (ctx.optparameterlist() != null && ctx.optparameterlist().parameterlist() != null) {
+            OpenGaussSQLParser.ParameterlistContext paramList = ctx.optparameterlist().parameterlist();
+            for (OpenGaussSQLParser.ParameterdefContext paramDef : paramList.parameterdef()) {
+                if (paramDef != null) {
+                    ProcedureParameter param = extractParameterDef(paramDef);
+                    if (param != null) {
+                        stmt.addParameter(param);
+                    }
+                }
+            }
+        }
+
+        String language = "plpgsql";
+        if (ctx.LANGUAGE(0) != null) {
+            language = ctx.LANGUAGE(0).getText();
+        } else if (ctx.LANGUAGE().size() > 1) {
+            language = ctx.LANGUAGE(1).getText();
+        }
+
+        if (ctx.dolString() != null) {
+            ProcedureBody body = new ProcedureBody(language, ctx.dolString().getText());
+            stmt.setBody(body);
+        }
+
+        if (ctx.SECURITY() != null && ctx.DEFINER() != null) {
+            ProcedureSecurity security = new ProcedureSecurity();
+            security.setDefiner(true);
+            stmt.setSecurity(security);
+        }
+
+        return stmt;
+    }
+
+    private ProcedureParameter extractParameterDef(OpenGaussSQLParser.ParameterdefContext ctx) {
+        if (ctx == null || ctx.IDENTIFIER() == null) {
+            return null;
+        }
+
+        String paramName = ctx.IDENTIFIER().getText();
+        ProcedureParameter.ParameterMode mode = ProcedureParameter.ParameterMode.IN;
+        String dataType = "";
+
+        if (ctx.IN() != null) {
+            mode = ProcedureParameter.ParameterMode.IN;
+        } else if (ctx.OUT() != null) {
+            mode = ProcedureParameter.ParameterMode.OUT;
+        } else if (ctx.INOUT() != null) {
+            mode = ProcedureParameter.ParameterMode.INOUT;
+        }
+
+        if (ctx.typename() != null) {
+            dataType = ctx.typename().getText();
+        }
+
+        return new ProcedureParameter(paramName, mode, dataType);
+    }
+
     public <T> T visit(ExternalTable externalTable) {
         // Default implementation - can be overridden by specific visitors
         return null;
+    }
+
+    @Override
+    public SQLStatement visitAlterprocedurestmt(OpenGaussSQLParser.AlterprocedurestmtContext ctx) {
+        if (ctx == null || ctx.IDENTIFIER() == null) {
+            return null;
+        }
+
+        String procedureName = ctx.IDENTIFIER().get(0).getText();
+        AlterProcedureStmt stmt = new AlterProcedureStmt(procedureName);
+
+        if (ctx.RENAME() != null && ctx.IDENTIFIER().size() > 1) {
+            stmt.setNewName(ctx.IDENTIFIER(1).getText());
+        } else if (ctx.OWNER() != null && ctx.IDENTIFIER().size() > 1) {
+            stmt.setNewOwner(ctx.IDENTIFIER(1).getText());
+        } else if (ctx.SET() != null && ctx.SCHEMA() != null && ctx.IDENTIFIER().size() > 1) {
+            stmt.setNewSchema(ctx.IDENTIFIER(1).getText());
+        } else if (ctx.SECURITY() != null && ctx.INVOKER() != null) {
+            stmt.setSecurityInvoker(Boolean.TRUE);
+        }
+
+        return stmt;
+    }
+
+    @Override
+    public SQLStatement visitCallstmt(OpenGaussSQLParser.CallstmtContext ctx) {
+        if (ctx == null || ctx.IDENTIFIER() == null) {
+            return null;
+        }
+
+        String procedureName = ctx.IDENTIFIER().getText();
+        CallFuncStmt stmt = new CallFuncStmt(procedureName);
+
+        if (ctx.callArguments() != null) {
+            OpenGaussSQLParser.CallArgumentsContext callArgs = ctx.callArguments();
+            
+            boolean hasNamedArgs = false;
+            boolean hasPositionalArgs = false;
+
+            if (callArgs.callArg() != null) {
+                for (OpenGaussSQLParser.CallArgContext argCtx : callArgs.callArg()) {
+                    if (argCtx.IDENTIFIER() != null && argCtx.ARROW() != null) {
+                        if (hasPositionalArgs) {
+                            throw new SemanticErrorException(
+                                "CALL statement cannot mix positional and named arguments",
+                                ctx.start.getLine(),
+                                "Mixed argument styles in CALL: use either positional or named arguments, not both"
+                            );
+                        }
+                        String paramName = argCtx.IDENTIFIER().getText();
+                        ValueExpression valueExpr = new ValueExpression(argCtx.aexpr().getText());
+                        stmt.addNamedArgument(paramName, valueExpr);
+                        hasNamedArgs = true;
+                    } else if (argCtx.aexpr() != null) {
+                        if (hasNamedArgs) {
+                            throw new SemanticErrorException(
+                                "CALL statement cannot mix positional and named arguments",
+                                ctx.start.getLine(),
+                                "Mixed argument styles in CALL: use either positional or named arguments, not both"
+                            );
+                        }
+                        ValueExpression valueExpr = new ValueExpression(argCtx.aexpr().getText());
+                        stmt.addArgument(valueExpr);
+                        hasPositionalArgs = true;
+                    }
+                }
+            }
+        }
+
+        return stmt;
     }
 }

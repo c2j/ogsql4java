@@ -1,5 +1,7 @@
 package com.sdchat.ogsql.ast;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -90,7 +92,7 @@ public class PartitionDefinition {
      * @return The list of values, or null if not specified
      */
     public List<String> getValues() {
-        return values;
+        return values != null ? Collections.unmodifiableList(values) : null;
     }
 
     /**
@@ -99,7 +101,7 @@ public class PartitionDefinition {
      * @param values The list of values
      */
     public void setValues(List<String> values) {
-        this.values = values;
+        this.values = values != null ? new ArrayList<>(values) : null;
     }
 
     /**

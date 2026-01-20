@@ -47,4 +47,12 @@ public class DataSource {
     public void setJoinCondition(String joinCondition) {
         this.joinCondition = joinCondition;
     }
+
+    public boolean hasJoin() {
+        return joinType != null && !joinType.trim().isEmpty();
+    }
+
+    public boolean hasAlias() {
+        return alias != null && !alias.trim().isEmpty();
+    }
 }

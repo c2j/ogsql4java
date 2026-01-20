@@ -2,6 +2,7 @@ package com.sdchat.ogsql.ast;
 
 import com.sdchat.ogsql.visitor.ASTVisitor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class ExternalTable implements SQLStatement {
 
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visit(this);
+        return visitor.visitExternalTable(this);
     }
 
     /**
@@ -97,7 +98,7 @@ public class ExternalTable implements SQLStatement {
      * @return The server options map
      */
     public Map<String, String> getServerOptions() {
-        return serverOptions;
+        return Collections.unmodifiableMap(serverOptions);
     }
 
     /**
@@ -131,7 +132,7 @@ public class ExternalTable implements SQLStatement {
      * @return The table options map
      */
     public Map<String, String> getTableOptions() {
-        return tableOptions;
+        return Collections.unmodifiableMap(tableOptions);
     }
 
     /**
@@ -165,7 +166,7 @@ public class ExternalTable implements SQLStatement {
      * @return The list of columns
      */
     public List<Column> getColumns() {
-        return columns;
+        return Collections.unmodifiableList(columns);
     }
 
     /**

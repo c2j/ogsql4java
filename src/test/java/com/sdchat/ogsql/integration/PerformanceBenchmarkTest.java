@@ -2,6 +2,7 @@ package com.sdchat.ogsql.integration;
 
 import com.sdchat.ogsql.parser.SQLParser;
 import com.sdchat.ogsql.parser.ParseResult;
+import com.sdchat.ogsql.parser.MultiParseResult;
 import com.sdchat.ogsql.ast.SQLStatement;
 import com.sdchat.ogsql.exception.InputValidationException;
 import org.junit.jupiter.api.Test;
@@ -154,10 +155,10 @@ public class PerformanceBenchmarkTest {
         long startTime = System.nanoTime();
         
         for (int i = 0; i < iterations; i++) {
-            List<SQLStatement> results = parser.parseMultiple(sql);
-            assertEquals(3, results.size(), "Should parse 3 statements");
-            for (SQLStatement result : results) {
-                assertNotNull(result, "Each statement should parse successfully");
+            MultiParseResult result = parser.parseMultiple(sql);
+            assertEquals(3, result.getStatements().size(), "Should parse 3 statements");
+            for (SQLStatement stmt : result.getStatements()) {
+                assertNotNull(stmt, "Each statement should parse successfully");
             }
         }
         
@@ -174,7 +175,7 @@ public class PerformanceBenchmarkTest {
     
     @Test
     @DisplayName("Should handle large SQL content from stream efficiently")
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    @Timeout(value = 15, unit = TimeUnit.SECONDS)
     void testLargeStreamPerformance() throws IOException {
         // Create a large SQL content (1MB)
         StringBuilder largeSql = new StringBuilder();

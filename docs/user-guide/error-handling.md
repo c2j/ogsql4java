@@ -24,17 +24,26 @@ Thrown when SQL syntax is invalid:
 
 ```java
 // See ErrorHandlingExamples.java for complete code
+import com.sdchat.ogsql.exception.ParseException;
+import com.sdchat.ogsql.exception.SyntaxErrorException;
+
 try {
     SQLStatement statement = parser.parse(sql);
 } catch (ParseException e) {
     System.out.println("Parse error: " + e.getMessage());
-    System.out.println("Line: " + e.getLine());
-    System.out.println("Column: " + e.getColumn());
+    if (e instanceof SyntaxErrorException) {
+        SyntaxErrorException see = (SyntaxErrorException) e;
+        System.out.println("Line: " + see.getLine());
+        System.out.println("Column: " + see.getColumn());
+        System.out.println("Context: " + see.getContext());
+        System.out.println("Suggestion: " + see.getSuggestion());
+    }
 }
 ```
 
 **When to use**: User-provided SQL or dynamic query generation
 **Recovery**: Report error to user, validate input, show example
+**Note**: Only `SyntaxErrorException` contains line/column/context/suggestion information
 
 ### InputValidationException
 

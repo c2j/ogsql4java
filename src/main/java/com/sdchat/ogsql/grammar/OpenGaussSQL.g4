@@ -33,8 +33,11 @@ stmt
     | updatestmt
     | deletestmt
     | createstmt
-    | dropstmt
+    | createprocedurestmt
+    | alterprocedurestmt
     | alterstmt
+    | dropstmt
+    | callstmt
     ;
 
 // ==================== SELECT Statement ====================
@@ -234,6 +237,59 @@ createstmt
     | createForeignTableStmt
     ;
 
+// ==================== CREATE PROCEDURE Statement ====================
+
+createprocedurestmt
+    : CREATE (OR REPLACE)? PROCEDURE IDENTIFIER '(' optparameterlist ')' 
+      (LANGUAGE IDENTIFIER)? 
+      (SECURITY DEFINER)? 
+      AS dolString 
+      (LANGUAGE IDENTIFIER)? 
+      (SEMI)?
+    ;
+
+alterprocedurestmt
+    : ALTER PROCEDURE IDENTIFIER (
+      RENAME TO IDENTIFIER
+      | OWNER TO IDENTIFIER
+      | SET SCHEMA IDENTIFIER
+      | SECURITY INVOKER
+      )
+      (SEMI)?
+    ;
+
+// ==================== CALL Statement ====================
+
+callstmt
+    : CALL IDENTIFIER callArguments (SEMI)?
+    ;
+
+callArguments
+    : '(' (callArg (',' callArg)*)? ')'
+    ;
+
+callArg
+    : aexpr
+    | IDENTIFIER ARROW aexpr
+    ;
+
+optparameterlist
+    : parameterlist
+    |
+    ;
+
+parameterlist
+    : parameterdef (',' parameterdef)*
+    ;
+
+parameterdef
+    : IDENTIFIER (IN | OUT | INOUT)? typename (DEFAULT aexpr)?
+    ;
+
+dolString
+    : '$$' ( ~'$' | '$' ~'$' )* '$$'
+    ;
+
 opttableelementlist
     : tableelementlist
     |
@@ -338,7 +394,8 @@ exprList
 // ==================== DROP Statement ====================
 
 dropstmt
-    : DROP TABLE IDENTIFIER
+    : DROP TABLE IDENTIFIER (IF EXISTS)?
+    | DROP PROCEDURE (IF EXISTS)? IDENTIFIER (CASCADE | RESTRICT)?
     ;
 
 // ==================== ALTER Statement ====================
@@ -552,6 +609,10 @@ foreignColumnOption
 // ==================== Lexer Rules ====================
 
 // Keywords
+IF: I F;
+EXISTS: E X I S T S;
+CASCADE: C A S C A D E;
+RESTRICT: R E S T R I C T;
 SELECT: S E L E C T;
 FROM: F R O M;
 WHERE: W H E R E;
@@ -575,6 +636,14 @@ SET: S E T;
 DELETE: D E L E T E;
 CREATE: C R E A T E;
 TABLE: T A B L E;
+PROCEDURE: P R O C E D U R E;
+REPLACE: R E P L A C E;
+OUT: O U T;
+INOUT: I N O U T;
+LANGUAGE: L A N G U A G E;
+SECURITY: S E C U R I T Y;
+INVOKER: I N V O K E R;
+DEFINER: D E F I N E R;
 CONSTRAINT: C O N S T R A I N T;
 NOT: N O T;
 NULL_P: N U L L;
@@ -610,6 +679,7 @@ OR: O R;
 NESTLOOP: N E S T L O O P;
 MERGEJOIN: M E R G E J O I N;
 HASHJOIN: H A S H J O I N;
+OWNER: O W N E R;
 RENAME: R E N A M E;
 TO: T O;
 SCHEMA: S C H E M A;
@@ -628,6 +698,8 @@ AVG: A V G;
 SUM: S U M;
 MIN: M I N;
 MAX: M A X;
+CALL: C A L L;
+ARROW: '=' '>';
 
 // Operators
 NOT_EQ: '!=' | '<>';

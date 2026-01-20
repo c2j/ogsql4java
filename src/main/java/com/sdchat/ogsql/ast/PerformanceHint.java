@@ -1,6 +1,7 @@
 package com.sdchat.ogsql.ast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -60,7 +61,11 @@ public class PerformanceHint {
      * @return List of table names
      */
     public List<String> getTables() {
-        return tables;
+        return Collections.unmodifiableList(tables);
+    }
+
+    public boolean hasTables() {
+        return !tables.isEmpty();
     }
 
     /**
