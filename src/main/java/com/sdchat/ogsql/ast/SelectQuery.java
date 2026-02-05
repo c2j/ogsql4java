@@ -9,6 +9,8 @@ public class SelectQuery implements SQLStatement {
     private String fromClause;
     private List<DataSource> dataSources;
     private List<PerformanceHint> hints;
+    private int withClauseCount = 0;
+    private int nestedWithCount = 0;
 
     public SelectQuery() {
         this.hints = new ArrayList<>();
@@ -57,6 +59,22 @@ public class SelectQuery implements SQLStatement {
         if (hint != null) {
             this.hints.add(hint);
         }
+    }
+
+    public int getWithClauseCount() {
+        return withClauseCount;
+    }
+
+    public void setWithClauseCount(int withClauseCount) {
+        this.withClauseCount = withClauseCount;
+    }
+
+    public int getNestedWithCount() {
+        return nestedWithCount;
+    }
+
+    public void setNestedWithCount(int nestedWithCount) {
+        this.nestedWithCount = nestedWithCount;
     }
 
     @Override

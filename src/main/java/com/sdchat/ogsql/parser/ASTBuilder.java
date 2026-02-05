@@ -716,8 +716,12 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
             language = ctx.LANGUAGE(1).getText();
         }
 
-        if (ctx.dolString() != null) {
-            ProcedureBody body = new ProcedureBody(language, ctx.dolString().getText());
+         if (ctx.procedureBody().dolString() != null) {
+            ProcedureBody body = new ProcedureBody(language, ctx.procedureBody().dolString().getText());
+            stmt.setBody(body);
+         } else if (ctx.procedureBody().BEGIN() != null) {
+            String procLanguage = ctx.LANGUAGE() != null && ctx.LANGUAGE().size() > 0 ? ctx.LANGUAGE(0).getText() : "plpgsql";
+            ProcedureBody body = new ProcedureBody(procLanguage, ctx.procedureBody().BEGIN().getText() + " " + ctx.procedureBody().END().getText());
             stmt.setBody(body);
         }
 

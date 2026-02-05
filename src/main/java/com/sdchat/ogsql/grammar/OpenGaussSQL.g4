@@ -40,10 +40,21 @@ stmt
     | callstmt
     ;
 
+// ==================== WITH Clause (Common Table Expressions) ====================
+
+withClause
+    : WITH RECURSIVE? commonTableExpr (',' commonTableExpr)*
+    ;
+
+commonTableExpr
+    : IDENTIFIER '(' IDENTIFIER (',' IDENTIFIER)* ')' AS '(' selectstmt ')'
+    | IDENTIFIER AS '(' selectstmt ')'
+    ;
+
 // ==================== SELECT Statement ====================
 
 selectstmt
-    : SELECT hintComment? optdistinct selectlist fromclause whereclause groupbyclause havingclause orderbyclause limitclause
+    : withClause? SELECT hintComment? optdistinct selectlist fromclause whereclause groupbyclause havingclause orderbyclause limitclause
     ;
 
 hintComment
@@ -227,7 +238,7 @@ settarget
 // ==================== DELETE Statement ====================
 
 deletestmt
-    : DELETE FROM IDENTIFIER optalias whereclause
+    : DELETE (FROM)? IDENTIFIER optalias whereclause
     ;
 
 // ==================== CREATE Statement ====================
@@ -241,11 +252,20 @@ createstmt
 
 createprocedurestmt
     : CREATE (OR REPLACE)? PROCEDURE IDENTIFIER '(' optparameterlist ')' 
-      (LANGUAGE IDENTIFIER)? 
-      (SECURITY DEFINER)? 
-      AS dolString 
-      (LANGUAGE IDENTIFIER)? 
+      (LANGUAGE IDENTIFIER)?
+      (SECURITY DEFINER)?
+      (AS | IS) procedureBody
+      (LANGUAGE IDENTIFIER)?
       (SEMI)?
+    ;
+
+procedureBody
+    : dolString
+    | BEGIN statementList END
+    ;
+
+statementList
+    : stmt (SEMI stmt)* SEMI?
     ;
 
 alterprocedurestmt
@@ -675,7 +695,11 @@ TRUE_P: T R U E;
 FALSE_P: F A L S E;
 IS: I S;
 AND: A N D;
+WITH: W I T H;
+RECURSIVE: R E C U R S I V E;
 OR: O R;
+BEGIN: B E G I N;
+END: E N D;
 NESTLOOP: N E S T L O O P;
 MERGEJOIN: M E R G E J O I N;
 HASHJOIN: H A S H J O I N;

@@ -1,0 +1,20 @@
+{
+  "hints": [
+    {"name": "NestLoop", "description": "Force nested loop join", "category": "join"},
+    {"name": "MergeJoin", "description": "Force merge join", "category": "join"},
+    {"name": "HashJoin", "description": "Force hash join", "category": "join"},
+    {"name": "IndexScan", "description": "Force index scan", "category": "scan"},
+    {"name": "BitmapScan", "description": "Use bitmap scan", "category": "scan"},
+    {"name": "HashAgg", "description": "Force hash aggregation", "category": "aggregation"},
+    {"name": "SortAgg", "description": "Force sort aggregation", "category": "aggregation"},
+    {"name": "Leading", "description": "Control join order", "category": "join_order"},
+    {"name": "Rows", "description": "Override row count estimates", "category": "cardinality"},
+    {"name": "SeqScan", "description": "Force sequential scan", "category": "scan"},
+    {"name": "TidScan", "description": "Force TID scan", "category": "scan"},
+    {"name": "NoSeqScan", "description": "Disable sequential scan", "category": "scan"},
+    {"name": "NoIndexScan", "description": "Disable index scan", "category": "scan"},
+    {"name": "NoBitmapScan", "description": "Disable bitmap scan", "category": "scan"},
+    {"name": "TableScan", "description": "Force table scan", "category": "scan"},
+    {"name": "GoodIndexScan", "description": "Force good index scan", "category": "scan"}
+  ]
+}

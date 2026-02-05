@@ -13,6 +13,10 @@ public class PerformanceHint {
     private String hintType;
     private List<String> tables;
     private String rawHint;
+    private HintLocation location;
+    private boolean valid;
+    private String errorMessage;
+    private String tableReferences;
 
     /**
      * Creates a new performance hint.
@@ -23,6 +27,7 @@ public class PerformanceHint {
         this.hintType = hintType;
         this.tables = new ArrayList<>();
         this.rawHint = hintType;
+        this.valid = true;
     }
 
     /**
@@ -35,6 +40,7 @@ public class PerformanceHint {
         this.hintType = hintType;
         this.tables = tables != null ? new ArrayList<>(tables) : new ArrayList<>();
         this.rawHint = hintType;
+        this.valid = true;
     }
 
     /**
@@ -98,12 +104,66 @@ public class PerformanceHint {
     }
 
     /**
-     * Sets the raw hint string.
+     * Sets raw hint string.
      *
      * @param rawHint Raw hint string
      */
     public void setRawHint(String rawHint) {
         this.rawHint = rawHint;
+    }
+
+    /**
+     * Gets hint location in original SQL.
+     *
+     * @return Hint location, or null if not available
+     */
+    public HintLocation getLocation() {
+        return location;
+    }
+
+    /**
+     * Sets hint location in original SQL.
+     *
+     * @param location Hint location
+     */
+    public void setLocation(HintLocation location) {
+        this.location = location;
+    }
+
+    /**
+     * Checks if hint is valid (exists in knowledge base).
+     *
+     * @return true if hint is valid, false otherwise
+     */
+    public boolean isValid() {
+        return valid;
+    }
+
+    /**
+     * Sets hint validation status.
+     *
+     * @param valid true if hint is valid, false otherwise
+     */
+    public void setValid(boolean valid) {
+        this.valid = valid;
+    }
+
+    /**
+     * Gets error message if hint is invalid.
+     *
+     * @return Error message, or null if hint is valid
+     */
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    /**
+     * Sets error message for invalid hint.
+     *
+     * @param errorMessage Error message
+     */
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 
     @Override
