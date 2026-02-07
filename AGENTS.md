@@ -108,7 +108,9 @@ mvn clean package
 ## Recent Changes
 - 003-gauss-procedure-parsing: Added Java 17 + ANTLR4 4.13.1, Spring Boot 3.5.9, JUnit 5 (for testing)
 - 001-api-user-guide: Added Markdown documentation (examples use Java 17) + OpenGauss SQL Parser library (com.sdchat.ogsql)
+- sql-table-relationship-graph-tests: Added JGraphT 1.5.2 for graph data structures
 
 <!-- MANUAL ADDITIONS START -->
 - 001-gaussdb-parser: Added Java 17 + Spring Boot 3.5.9, ANTLR4 4.13.1
+- sql-table-relationship-graph-tests: Added JGraphT 1.5.2
 <!-- MANUAL ADDITIONS END -->

@@ -17,6 +17,7 @@ A comprehensive Java library for parsing OpenGauss SQL statements using ANTLR4. 
 - ✅ **Partitioned Tables** - RANGE, LIST, HASH partitioning with subpartitioning
 - ✅ **Foreign Tables** - CREATE FOREIGN TABLE with server options
 - ✅ **Metadata Extraction** - Extract tables, columns, functions, and conditions
+- ✅ **Table Relationship Graphs** - Visualize SQL table relationships (DOT/JSON export)
 
 ### Performance & Security
 - ✅ **High Performance** - 2000+ statements/second parsing speed
@@ -170,6 +171,39 @@ if (result.isSuccess()) {
     System.out.println("Functions: " + extractor.getFunctions());
     System.out.println("WHERE conditions: " + extractor.getWhereConditions());
 }
+```
+
+### Table Relationship Graphs
+
+Extract and visualize table relationships from SQL queries:
+
+```java
+import com.sdchat.ogsql.graph.*;
+import com.sdchat.ogsql.graph.formatter.*;
+
+// Build a query with JOINs
+SelectQuery query = new SelectQuery();
+query.addDataSource(new DataSource("users"));
+
+DataSource orders = new DataSource("orders");
+orders.setAlias("o");
+orders.setJoinType("INNER");
+orders.setJoinCondition("users.id = o.user_id");
+query.addDataSource(orders);
+
+// Extract relationship graph
+TableRelationshipExtractor extractor = new TableRelationshipExtractor();
+TableRelationshipGraph graph = extractor.visitSelectQuery(query);
+
+// Export to DOT format for visualization
+DotFormatter dotFormatter = new DotFormatter();
+String dot = dotFormatter.format(graph);
+System.out.println(dot);
+
+// Export to JSON for programmatic use
+JsonFormatter jsonFormatter = new JsonFormatter();
+String json = jsonFormatter.format(graph);
+System.out.println(json);
 ```
 
 ### Configuration Options
