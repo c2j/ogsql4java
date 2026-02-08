@@ -33,13 +33,19 @@ stmt
     | updatestmt
     | deletestmt
     | createstmt
-    | createschemastmt
     | createprocedurestmt
     | alterprocedurestmt
     | alterstmt
     | dropstmt
     | callstmt
     | setstmt
+    | createschemastmt
+    | explainstmt
+    | showstmt
+    | beginstmt
+    | commitstmt
+    | rollbackstmt
+    | analyzestmt
     ;
 
 // ==================== WITH Clause (Common Table Expressions) ====================
@@ -197,7 +203,7 @@ offsetclause
 // ==================== INSERT Statement ====================
 
 insertstmt
-    : INSERT INTO IDENTIFIER optcolumnList insertrest
+    : INSERT INTO IDENTIFIER optcolumnList insertrest upsertClause?
     ;
 
 optcolumnList
@@ -221,6 +227,17 @@ inserttargetlist
 inserttargetel
     : aexpr
     | DEFAULT
+    ;
+
+// ==================== UPSERT Clause (ON DUPLICATE KEY UPDATE) ====================
+
+upsertClause
+    : ON DUPLICATE KEY UPDATE setClause whereclause?
+    | ON DUPLICATE KEY UPDATE NOTHING
+    ;
+
+setClause
+    : settarget (',' settarget)*
     ;
 
 // ==================== UPDATE Statement ====================
@@ -293,14 +310,6 @@ callArguments
 callArg
     : aexpr
     | IDENTIFIER ARROW aexpr
-    ;
-
-setstmt
-    : SET IDENTIFIER (TO | EQ) aexpr (SEMI)?
-    ;
-
-createschemastmt
-    : CREATE SCHEMA IDENTIFIER (SEMI)?
     ;
 
 optparameterlist
@@ -426,6 +435,56 @@ exprList
 dropstmt
     : DROP TABLE IDENTIFIER (IF EXISTS)?
     | DROP PROCEDURE (IF EXISTS)? IDENTIFIER (CASCADE | RESTRICT)?
+    | DROP SCHEMA (IF EXISTS)? IDENTIFIER (CASCADE | RESTRICT)? (SEMI)?
+    ;
+
+// ==================== SET Statement ====================
+
+setstmt
+    : SET IDENTIFIER (TO | '=') aexpr (SEMI)?
+    ;
+
+// ==================== SCHEMA Statement ====================
+
+createschemastmt
+    : CREATE SCHEMA IDENTIFIER (SEMI)?
+    ;
+
+// ==================== EXPLAIN Statement ====================
+
+explainstmt
+    : EXPLAIN (LPAREN explainOption (COMMA explainOption)* RPAREN)? selectstmt (SEMI)?
+    ;
+
+explainOption
+    : IDENTIFIER
+    | BOOLEAN
+    ;
+
+// ==================== SHOW Statement ====================
+
+showstmt
+    : SHOW IDENTIFIER (SEMI)?
+    ;
+
+// ==================== Transaction Statements ====================
+
+beginstmt
+    : BEGIN (SEMI)?
+    ;
+
+commitstmt
+    : COMMIT (SEMI)?
+    ;
+
+rollbackstmt
+    : ROLLBACK (SEMI)?
+    ;
+
+// ==================== ANALYZE Statement ====================
+
+analyzestmt
+    : ANALYZE IDENTIFIER? (SEMI)?
     ;
 
 // ==================== ALTER Statement ====================
@@ -502,19 +561,19 @@ qualifiedIdentifier
 
 functionCall
     : IDENTIFIER '(' ')'
-    | IDENTIFIER '(' aexpr ')'
-    | IDENTIFIER '(' aexpr ',' exprList ')'
-    | COUNT '(' '*' ')'
-    | COUNT '(' aexpr ')'
-    | AVG '(' aexpr ')'
-    | SUM '(' aexpr ')'
-    | MIN '(' aexpr ')'
-    | MAX '(' aexpr ')'
+    | IDENTIFIER LPAREN aexpr RPAREN
+    | IDENTIFIER LPAREN aexpr COMMA exprList RPAREN
+    | COUNT LPAREN MULT_OP RPAREN
+    | COUNT LPAREN aexpr RPAREN
+    | AVG LPAREN aexpr RPAREN
+    | SUM LPAREN aexpr RPAREN
+    | MIN LPAREN aexpr RPAREN
+    | MAX LPAREN aexpr RPAREN
     ;
 
 inExpr
-    : '(' selectstmt ')'
-    | '(' exprList ')'
+    : LPAREN selectstmt RPAREN
+    | LPAREN exprList RPAREN
     ;
 
 // ==================== Hints (OpenGauss) ====================
@@ -530,38 +589,38 @@ hintItem
     ;
 
 tableHintList
-    : IDENTIFIER (',' IDENTIFIER)*
+    : IDENTIFIER (COMMA IDENTIFIER)*
     |
     ;
 
 // ==================== Foreign Tables (OpenGauss) ====================
 
 createForeignTableStmt
-    : CREATE FOREIGN TABLE IDENTIFIER '(' optforeigntableelementlist ')' SERVER IDENTIFIER optcreateforeigntableoptions
+    : CREATE FOREIGN TABLE IDENTIFIER LPAREN optforeigntableelementlist RPAREN SERVER IDENTIFIER optcreateforeigntableoptions
     ;
 
 optcreateforeigntableoptions
-    : OPTIONS '(' createForeignTableOptionList ')' optServerOptions
-    | SERVER OPTIONS '(' createForeignTableOptionList ')' optTableOptions
+    : OPTIONS LPAREN createForeignTableOptionList RPAREN optServerOptions
+    | SERVER OPTIONS LPAREN createForeignTableOptionList RPAREN optTableOptions
     |
     ;
 
 optServerOptions
-    : SERVER OPTIONS '(' createForeignTableOptionList ')'
+    : SERVER OPTIONS LPAREN createForeignTableOptionList RPAREN
     |
     ;
 
 optTableOptions
-    : OPTIONS '(' createForeignTableOptionList ')'
+    : OPTIONS LPAREN createForeignTableOptionList RPAREN
     |
     ;
 
 createForeignTableOptionList
-    : createForeignTableOption (',' createForeignTableOption)*
+    : createForeignTableOption (COMMA createForeignTableOption)*
     ;
 
 createForeignTableOption
-    : SCONST '=' SCONST
+    : SCONST EQ SCONST
     | SCONST SCONST
     ;
 
@@ -571,7 +630,7 @@ alterForeignTableStmt
     ;
 
 alterforeigntablecmds
-    : alterforeigntablecmd (',' alterforeigntablecmd)*
+    : alterforeigntablecmd (COMMA alterforeigntablecmd)*
     ;
 
 alterforeigntablecmd
@@ -579,7 +638,7 @@ alterforeigntablecmd
     | DROP COLUMN IDENTIFIER
     | ALTER COLUMN IDENTIFIER altercolumnaction
     | SERVER IDENTIFIER
-    | OPTIONS '(' alterForeignTableOptionList ')'
+    | OPTIONS LPAREN alterForeignTableOptionList RPAREN
     | RENAME TO IDENTIFIER
     | SET SCHEMA IDENTIFIER
     ;
@@ -592,11 +651,11 @@ altercolumnaction
     ;
 
 alterForeignTableOptionList
-    : alterForeignTableOption (',' alterForeignTableOption)*
+    : alterForeignTableOption (COMMA alterForeignTableOption)*
     ;
 
 alterForeignTableOption
-    : SET SCONST '=' SCONST
+    : SET SCONST EQ SCONST
     | SET SCONST SCONST
     | DROP SCONST
     ;
@@ -608,7 +667,7 @@ optforeigntableelementlist
     ;
 
 foreigntableelementlist
-    : foreigntableelement (',' foreigntableelement)*
+    : foreigntableelement (COMMA foreigntableelement)*
     ;
 
 foreigntableelement
@@ -626,15 +685,15 @@ foreigncolquallist
 
 foreigncolqual
     : colconstraint
-    | OPTIONS '(' foreignColumnOptionList ')'
+    | OPTIONS LPAREN foreignColumnOptionList RPAREN
     ;
 
 foreignColumnOptionList
-    : foreignColumnOption (',' foreignColumnOption)*
+    : foreignColumnOption (COMMA foreignColumnOption)*
     ;
 
 foreignColumnOption
-    : SCONST '=' SCONST
+    : SCONST EQ SCONST
     | SCONST SCONST
     ;
 
@@ -729,6 +788,8 @@ OUTER: O U T E R;
 CROSS: C R O S S;
 ON: O N;
 OFF: O F F;
+DUPLICATE: D U P L I C A T E;
+NOTHING: N O T H I N G;
 USING: U S I N G;
 COUNT: C O U N T;
 AVG: A V G;
@@ -737,10 +798,14 @@ MIN: M I N;
 MAX: M A X;
 CALL: C A L L;
 ARROW: '=' '>';
+EXPLAIN: E X P L A I N;
+SHOW: S H O W;
+BEGIN: B E G I N;
+COMMIT: C O M M I T;
+ROLLBACK: R O L L B A C K;
+ANALYZE: A N A L Y Z E;
 
 // Operators
-EQ: '=';
-COMMA: ',';
 NOT_EQ: '!=' | '<>';
 LTE_OP: '<=';
 GTE_OP: '>=';
@@ -748,10 +813,14 @@ PLUS_OP: '+';
 MINUS_OP: '-';
 MULT_OP: '*';
 DIV_OP: '/';
+EQ: '=';
 
 // Parentheses
 LPAREN: '(';
 RPAREN: ')';
+
+// Comma
+COMMA: ',';
 
 // Semicolon
 SEMI: ';';

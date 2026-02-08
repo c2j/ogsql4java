@@ -5,6 +5,14 @@ import com.sdchat.ogsql.ast.SQLStatement;
 import com.sdchat.ogsql.ast.ValueExpression;
 import com.sdchat.ogsql.ast.StatementType;
 import com.sdchat.ogsql.visitor.ASTVisitor;
+import com.sdchat.ogsql.ast.ExplainStatement;
+import com.sdchat.ogsql.ast.ShowStatement;
+import com.sdchat.ogsql.ast.BeginStatement;
+import com.sdchat.ogsql.ast.CommitStatement;
+import com.sdchat.ogsql.ast.RollbackStatement;
+import com.sdchat.ogsql.ast.AnalyzeStatement;
+import com.sdchat.ogsql.ast.SetStatement;
+import com.sdchat.ogsql.ast.CreateSchemaStatement;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -263,6 +271,46 @@ public class CallFuncStmtTest {
 
         @Override
         public Void visitExternalTable(com.sdchat.ogsql.ast.ExternalTable externalTable) {
+            return null;
+        }
+
+        @Override
+        public Void visitExplainStatement(ExplainStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitShowStatement(ShowStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitBeginStatement(BeginStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitCommitStatement(CommitStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitRollbackStatement(RollbackStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitAnalyzeStatement(AnalyzeStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitSetStatement(SetStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitCreateSchemaStatement(CreateSchemaStatement statement) {
             return null;
         }
     }

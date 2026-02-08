@@ -33,24 +33,30 @@ stmt
     | updatestmt
     | deletestmt
     | createstmt
-    | createschemastmt
     | createprocedurestmt
     | alterprocedurestmt
     | alterstmt
     | dropstmt
     | callstmt
     | setstmt
+    | createschemastmt
+    | explainstmt
+    | showstmt
+    | beginstmt
+    | commitstmt
+    | rollbackstmt
+    | analyzestmt
     ;
 
 // ==================== WITH Clause (Common Table Expressions) ====================
 
 withClause
-    : WITH RECURSIVE? commonTableExpr (',' commonTableExpr)*
+    : WITH RECURSIVE? commonTableExpr LPAREN,' commonTableExpr)*
     ;
 
 commonTableExpr
-    : IDENTIFIER '(' IDENTIFIER (',' IDENTIFIER)* ')' AS '(' selectstmt ')'
-    | IDENTIFIER AS '(' selectstmt ')'
+    : IDENTIFIER 'LPAREN IDENTIFIER LPAREN,' IDENTIFIER)* RPAREN' AS 'LPAREN selectstmt RPAREN'
+    | IDENTIFIER AS 'LPAREN selectstmt RPAREN'
     ;
 
 // ==================== SELECT Statement ====================
@@ -71,7 +77,7 @@ optdistinct
     ;
 
 selectlist
-    : expr (',' expr)*
+    : expr LPAREN,' expr)*
     | MULT_OP
     ;
 
@@ -84,7 +90,7 @@ fromclause
 
 fromExpression
     : tableExpression (joinExpression)*
-    | tableExpression (',' tableExpression)*
+    | tableExpression LPAREN,' tableExpression)*
     |
     ;
 
@@ -94,7 +100,7 @@ tableExpression
 
 tableReference
     : IDENTIFIER
-    | '(' selectstmt ')' 
+    | 'LPAREN selectstmt RPAREN' 
     ;
 
 joinExpression
@@ -115,7 +121,7 @@ joinType
 
 joinCondition
     : ON aexpr
-    | USING '(' columnlist ')'
+    | USING 'LPAREN columnlist RPAREN'
     ;
 
 optalias
@@ -134,7 +140,7 @@ whereclause
 // ==================== GROUP BY Clause ====================
 
 groupbyclause
-    : GROUP BY expr (',' expr)*
+    : GROUP BY expr LPAREN,' expr)*
     |
     ;
 
@@ -148,7 +154,7 @@ havingclause
 // ==================== ORDER BY Clause ====================
 
 orderbyclause
-    : ORDER BY sortby (',' sortby)*
+    : ORDER BY sortby LPAREN,' sortby)*
     |
     ;
 
@@ -197,30 +203,41 @@ offsetclause
 // ==================== INSERT Statement ====================
 
 insertstmt
-    : INSERT INTO IDENTIFIER optcolumnList insertrest
+    : INSERT INTO IDENTIFIER optcolumnList insertrest upsertClause?
     ;
 
 optcolumnList
-    : '(' columnlist ')'
+    : 'LPAREN columnlist RPAREN'
     |
     ;
 
 columnlist
-    : IDENTIFIER (',' IDENTIFIER)*
+    : IDENTIFIER LPAREN,' IDENTIFIER)*
     ;
 
 insertrest
-    : VALUES inserttargetlist (',' inserttargetlist)*
+    : VALUES inserttargetlist LPAREN,' inserttargetlist)*
     | selectstmt
     ;
 
 inserttargetlist
-    : '(' inserttargetel (',' inserttargetel)* ')'
+    : 'LPAREN inserttargetel LPAREN,' inserttargetel)* RPAREN'
     ;
 
 inserttargetel
     : aexpr
     | DEFAULT
+    ;
+
+// ==================== UPSERT Clause (ON DUPLICATE KEY UPDATE) ====================
+
+upsertClause
+    : ON DUPLICATE KEY UPDATE setClause whereclause?
+    | ON DUPLICATE KEY UPDATE NOTHING
+    ;
+
+setClause
+    : settarget LPAREN,' settarget)*
     ;
 
 // ==================== UPDATE Statement ====================
@@ -230,7 +247,7 @@ updatestmt
     ;
 
 setclist
-    : settarget (',' settarget)*
+    : settarget LPAREN,' settarget)*
     ;
 
 settarget
@@ -246,14 +263,14 @@ deletestmt
 // ==================== CREATE Statement ====================
 
 createstmt
-    : CREATE TABLE IDENTIFIER '(' opttableelementlist ')' optPartitionBy
+    : CREATE TABLE IDENTIFIER 'LPAREN opttableelementlist RPAREN' optPartitionBy
     | createForeignTableStmt
     ;
 
 // ==================== CREATE PROCEDURE Statement ====================
 
 createprocedurestmt
-    : CREATE (OR REPLACE)? PROCEDURE IDENTIFIER '(' optparameterlist ')' 
+    : CREATE (OR REPLACE)? PROCEDURE IDENTIFIER 'LPAREN optparameterlist RPAREN' 
       (LANGUAGE IDENTIFIER)?
       (SECURITY DEFINER)?
       (AS | IS) procedureBody
@@ -287,20 +304,12 @@ callstmt
     ;
 
 callArguments
-    : '(' (callArg (',' callArg)*)? ')'
+    : 'LPAREN (callArg LPAREN,' callArg)*)? RPAREN'
     ;
 
 callArg
     : aexpr
     | IDENTIFIER ARROW aexpr
-    ;
-
-setstmt
-    : SET IDENTIFIER (TO | EQ) aexpr (SEMI)?
-    ;
-
-createschemastmt
-    : CREATE SCHEMA IDENTIFIER (SEMI)?
     ;
 
 optparameterlist
@@ -309,7 +318,7 @@ optparameterlist
     ;
 
 parameterlist
-    : parameterdef (',' parameterdef)*
+    : parameterdef LPAREN,' parameterdef)*
     ;
 
 parameterdef
@@ -326,7 +335,7 @@ opttableelementlist
     ;
 
 tableelementlist
-    : tableelement (',' tableelement)*
+    : tableelement LPAREN,' tableelement)*
     ;
 
 tableelement
@@ -340,12 +349,12 @@ columnDef
 
 typename
     : IDENTIFIER
-    | IDENTIFIER '(' ICONST ')'
-    | IDENTIFIER '(' ICONST ',' ICONST ')'
+    | IDENTIFIER 'LPAREN ICONST RPAREN'
+    | IDENTIFIER 'LPAREN ICONST COMMA ICONST RPAREN'
     ;
 
 colquallist
-    : colconstraint (',' colconstraint)*
+    : colconstraint LPAREN,' colconstraint)*
     |
     ;
 
@@ -363,15 +372,15 @@ tableconstraint
     ;
 
 constraintElem
-    : UNIQUE '(' columnlist ')'
-    | PRIMARY KEY '(' columnlist ')'
-    | CHECK '(' aexpr ')'
+    : UNIQUE 'LPAREN columnlist RPAREN'
+    | PRIMARY KEY 'LPAREN columnlist RPAREN'
+    | CHECK 'LPAREN aexpr RPAREN'
     ;
 
 // ==================== Partitioning (OpenGauss) ====================
 
 optPartitionBy
-    : PARTITION BY partitionStrategy '(' columnlist ')' optPartitionByClause
+    : PARTITION BY partitionStrategy 'LPAREN columnlist RPAREN' optPartitionByClause
     |
     ;
 
@@ -383,13 +392,13 @@ partitionStrategy
 
 optPartitionByClause
     : PARTITIONS ICONST
-    | '(' optPartitionDefElementList ')'
-    | SUBPARTITION BY partitionStrategy '(' columnlist ')' optSubpartitionByClause
+    | 'LPAREN optPartitionDefElementList RPAREN'
+    | SUBPARTITION BY partitionStrategy 'LPAREN columnlist RPAREN' optSubpartitionByClause
     |
     ;
 
 optPartitionDefElementList
-    : partitionDefElement (',' partitionDefElement)?
+    : partitionDefElement LPAREN,' partitionDefElement)?
     |
     ;
 
@@ -399,12 +408,12 @@ partitionDefElement
 
 optSubpartitionByClause
     : SUBPARTITIONS ICONST
-    | '(' optSubpartitionDefElementList ')'
+    | 'LPAREN optSubpartitionDefElementList RPAREN'
     |
     ;
 
 optSubpartitionDefElementList
-    : subpartitionDefElement (',' subpartitionDefElement)?
+    : subpartitionDefElement LPAREN,' subpartitionDefElement)?
     |
     ;
 
@@ -413,12 +422,12 @@ subpartitionDefElement
     ;
 
 partitionBoundSpec
-    : IN '(' exprList ')'
-    | '(' exprList ')'
+    : IN 'LPAREN exprList RPAREN'
+    | 'LPAREN exprList RPAREN'
     ;
 
 exprList
-    : expr (',' expr)*
+    : expr LPAREN,' expr)*
     ;
 
 // ==================== DROP Statement ====================
@@ -426,6 +435,56 @@ exprList
 dropstmt
     : DROP TABLE IDENTIFIER (IF EXISTS)?
     | DROP PROCEDURE (IF EXISTS)? IDENTIFIER (CASCADE | RESTRICT)?
+    | DROP SCHEMA (IF EXISTS)? IDENTIFIER (CASCADE | RESTRICT)? (SEMI)?
+    ;
+
+// ==================== SET Statement ====================
+
+setstmt
+    : SET IDENTIFIER (TO | '=RPAREN aexpr (SEMI)?
+    ;
+
+// ==================== SCHEMA Statement ====================
+
+createschemastmt
+    : CREATE SCHEMA IDENTIFIER (SEMI)?
+    ;
+
+// ==================== EXPLAIN Statement ====================
+
+explainstmt
+    : EXPLAIN (LPAREN explainOption (COMMA explainOption)* RPAREN)? selectstmt (SEMI)?
+    ;
+
+explainOption
+    : IDENTIFIER
+    | BOOLEAN
+    ;
+
+// ==================== SHOW Statement ====================
+
+showstmt
+    : SHOW IDENTIFIER (SEMI)?
+    ;
+
+// ==================== Transaction Statements ====================
+
+beginstmt
+    : BEGIN (SEMI)?
+    ;
+
+commitstmt
+    : COMMIT (SEMI)?
+    ;
+
+rollbackstmt
+    : ROLLBACK (SEMI)?
+    ;
+
+// ==================== ANALYZE Statement ====================
+
+analyzestmt
+    : ANALYZE IDENTIFIER? (SEMI)?
     ;
 
 // ==================== ALTER Statement ====================
@@ -436,7 +495,7 @@ alterstmt
     ;
 
 altertablecmds
-    : altertablecmd (',' altertablecmd)*
+    : altertablecmd LPAREN,' altertablecmd)*
     ;
 
 altertablecmd
@@ -478,7 +537,7 @@ aexpr
     | aexpr IS NOT FALSE_P
     | aexpr BETWEEN aexpr AND aexpr
     | aexpr NOT BETWEEN aexpr AND aexpr
-    | '(' aexpr ')'
+    | 'LPAREN aexpr RPAREN'
     ;
 
 cexpr
@@ -492,29 +551,29 @@ cexpr
     | ON
     | OFF
     | functionCall
-    | '(' selectstmt ')'
-    | '(' aexpr ')'
+    | 'LPAREN selectstmt RPAREN'
+    | 'LPAREN aexpr RPAREN'
     ;
 
 qualifiedIdentifier
-    : IDENTIFIER ('.' IDENTIFIER)*
+    : IDENTIFIER LPAREN.' IDENTIFIER)*
     ;
 
 functionCall
-    : IDENTIFIER '(' ')'
-    | IDENTIFIER '(' aexpr ')'
-    | IDENTIFIER '(' aexpr ',' exprList ')'
-    | COUNT '(' '*' ')'
-    | COUNT '(' aexpr ')'
-    | AVG '(' aexpr ')'
-    | SUM '(' aexpr ')'
-    | MIN '(' aexpr ')'
-    | MAX '(' aexpr ')'
+    : IDENTIFIER 'LPAREN RPAREN'
+    | IDENTIFIER LPAREN aexpr RPAREN
+    | IDENTIFIER LPAREN aexpr COMMA exprList RPAREN
+    | COUNT LPAREN MULT_OP RPAREN
+    | COUNT LPAREN aexpr RPAREN
+    | AVG LPAREN aexpr RPAREN
+    | SUM LPAREN aexpr RPAREN
+    | MIN LPAREN aexpr RPAREN
+    | MAX LPAREN aexpr RPAREN
     ;
 
 inExpr
-    : '(' selectstmt ')'
-    | '(' exprList ')'
+    : LPAREN selectstmt RPAREN
+    | LPAREN exprList RPAREN
     ;
 
 // ==================== Hints (OpenGauss) ====================
@@ -530,38 +589,38 @@ hintItem
     ;
 
 tableHintList
-    : IDENTIFIER (',' IDENTIFIER)*
+    : IDENTIFIER (COMMA IDENTIFIER)*
     |
     ;
 
 // ==================== Foreign Tables (OpenGauss) ====================
 
 createForeignTableStmt
-    : CREATE FOREIGN TABLE IDENTIFIER '(' optforeigntableelementlist ')' SERVER IDENTIFIER optcreateforeigntableoptions
+    : CREATE FOREIGN TABLE IDENTIFIER LPAREN optforeigntableelementlist RPAREN SERVER IDENTIFIER optcreateforeigntableoptions
     ;
 
 optcreateforeigntableoptions
-    : OPTIONS '(' createForeignTableOptionList ')' optServerOptions
-    | SERVER OPTIONS '(' createForeignTableOptionList ')' optTableOptions
+    : OPTIONS LPAREN createForeignTableOptionList RPAREN optServerOptions
+    | SERVER OPTIONS LPAREN createForeignTableOptionList RPAREN optTableOptions
     |
     ;
 
 optServerOptions
-    : SERVER OPTIONS '(' createForeignTableOptionList ')'
+    : SERVER OPTIONS LPAREN createForeignTableOptionList RPAREN
     |
     ;
 
 optTableOptions
-    : OPTIONS '(' createForeignTableOptionList ')'
+    : OPTIONS LPAREN createForeignTableOptionList RPAREN
     |
     ;
 
 createForeignTableOptionList
-    : createForeignTableOption (',' createForeignTableOption)*
+    : createForeignTableOption (COMMA createForeignTableOption)*
     ;
 
 createForeignTableOption
-    : SCONST '=' SCONST
+    : SCONST EQ SCONST
     | SCONST SCONST
     ;
 
@@ -571,7 +630,7 @@ alterForeignTableStmt
     ;
 
 alterforeigntablecmds
-    : alterforeigntablecmd (',' alterforeigntablecmd)*
+    : alterforeigntablecmd (COMMA alterforeigntablecmd)*
     ;
 
 alterforeigntablecmd
@@ -579,7 +638,7 @@ alterforeigntablecmd
     | DROP COLUMN IDENTIFIER
     | ALTER COLUMN IDENTIFIER altercolumnaction
     | SERVER IDENTIFIER
-    | OPTIONS '(' alterForeignTableOptionList ')'
+    | OPTIONS LPAREN alterForeignTableOptionList RPAREN
     | RENAME TO IDENTIFIER
     | SET SCHEMA IDENTIFIER
     ;
@@ -592,11 +651,11 @@ altercolumnaction
     ;
 
 alterForeignTableOptionList
-    : alterForeignTableOption (',' alterForeignTableOption)*
+    : alterForeignTableOption (COMMA alterForeignTableOption)*
     ;
 
 alterForeignTableOption
-    : SET SCONST '=' SCONST
+    : SET SCONST EQ SCONST
     | SET SCONST SCONST
     | DROP SCONST
     ;
@@ -608,7 +667,7 @@ optforeigntableelementlist
     ;
 
 foreigntableelementlist
-    : foreigntableelement (',' foreigntableelement)*
+    : foreigntableelement (COMMA foreigntableelement)*
     ;
 
 foreigntableelement
@@ -626,15 +685,15 @@ foreigncolquallist
 
 foreigncolqual
     : colconstraint
-    | OPTIONS '(' foreignColumnOptionList ')'
+    | OPTIONS LPAREN foreignColumnOptionList RPAREN
     ;
 
 foreignColumnOptionList
-    : foreignColumnOption (',' foreignColumnOption)*
+    : foreignColumnOption (COMMA foreignColumnOption)*
     ;
 
 foreignColumnOption
-    : SCONST '=' SCONST
+    : SCONST EQ SCONST
     | SCONST SCONST
     ;
 
@@ -729,6 +788,8 @@ OUTER: O U T E R;
 CROSS: C R O S S;
 ON: O N;
 OFF: O F F;
+DUPLICATE: D U P L I C A T E;
+NOTHING: N O T H I N G;
 USING: U S I N G;
 COUNT: C O U N T;
 AVG: A V G;
@@ -737,10 +798,14 @@ MIN: M I N;
 MAX: M A X;
 CALL: C A L L;
 ARROW: '=' '>';
+EXPLAIN: E X P L A I N;
+SHOW: S H O W;
+BEGIN: B E G I N;
+COMMIT: C O M M I T;
+ROLLBACK: R O L L B A C K;
+ANALYZE: A N A L Y Z E;
 
 // Operators
-EQ: '=';
-COMMA: ',';
 NOT_EQ: '!=' | '<>';
 LTE_OP: '<=';
 GTE_OP: '>=';
@@ -748,10 +813,14 @@ PLUS_OP: '+';
 MINUS_OP: '-';
 MULT_OP: '*';
 DIV_OP: '/';
+EQ: '=';
 
 // Parentheses
-LPAREN: '(';
-RPAREN: ')';
+LPAREN: 'LPAREN;
+RPAREN: RPAREN';
+
+// Comma
+COMMA: COMMA;
 
 // Semicolon
 SEMI: ';';
@@ -770,7 +839,7 @@ FCONST
     ;
 
 SCONST
-    : '\'' (~'\'' | '\'\'')* '\''
+    : '\'' (~'\'' | '\'\'RPAREN* '\''
     ;
 
 // Comments and Whitespace

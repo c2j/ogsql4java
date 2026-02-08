@@ -270,4 +270,52 @@ public class TableRelationshipExtractor implements ASTVisitor<TableRelationshipG
     public TableRelationshipGraph visitExternalTable(ExternalTable externalTable) {
         return graph;
     }
+
+    @Override
+    public TableRelationshipGraph visitExplainStatement(ExplainStatement statement) {
+        LOGGER.fine("EXPLAIN statement not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitShowStatement(ShowStatement statement) {
+        LOGGER.fine("SHOW statement not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitBeginStatement(BeginStatement statement) {
+        LOGGER.fine("BEGIN statement not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitCommitStatement(CommitStatement statement) {
+        LOGGER.fine("COMMIT statement not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitRollbackStatement(RollbackStatement statement) {
+        LOGGER.fine("ROLLBACK statement not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitAnalyzeStatement(AnalyzeStatement statement) {
+        LOGGER.fine("ANALYZE statement not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitSetStatement(SetStatement statement) {
+        LOGGER.fine("SET statement not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitCreateSchemaStatement(CreateSchemaStatement statement) {
+        LOGGER.fine("CREATE SCHEMA statement not supported for relationship extraction");
+        return graph;
+    }
 }

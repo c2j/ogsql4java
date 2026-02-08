@@ -41,6 +41,8 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
             return visitDeletestmt(ctx.deletestmt());
         } else if (ctx.createstmt() != null) {
             return visitCreatestmt(ctx.createstmt());
+        } else if (ctx.createschemastmt() != null) {
+            return visitCreateschemastmt(ctx.createschemastmt());
         } else if (ctx.createprocedurestmt() != null) {
             return visitCreateprocedurestmt(ctx.createprocedurestmt());
         } else if (ctx.alterprocedurestmt() != null) {
@@ -51,6 +53,8 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
             return visitDropstmt(ctx.dropstmt());
         } else if (ctx.callstmt() != null) {
             return visitCallstmt(ctx.callstmt());
+        } else if (ctx.setstmt() != null) {
+            return visitSetstmt(ctx.setstmt());
         }
         return null;
     }
@@ -842,6 +846,32 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
                     }
                 }
             }
+        }
+
+        return stmt;
+    }
+
+    @Override
+    public SQLStatement visitSetstmt(OpenGaussSQLParser.SetstmtContext ctx) {
+        SetStatement stmt = new SetStatement();
+
+        if (ctx.IDENTIFIER() != null) {
+            stmt.setParameterName(ctx.IDENTIFIER().getText());
+        }
+
+        if (ctx.aexpr() != null) {
+            stmt.setValue(new ValueExpression(ctx.aexpr().getText()));
+        }
+
+        return stmt;
+    }
+
+    @Override
+    public SQLStatement visitCreateschemastmt(OpenGaussSQLParser.CreateschemastmtContext ctx) {
+        CreateSchemaStatement stmt = new CreateSchemaStatement();
+
+        if (ctx.IDENTIFIER() != null) {
+            stmt.setSchemaName(ctx.IDENTIFIER().getText());
         }
 
         return stmt;

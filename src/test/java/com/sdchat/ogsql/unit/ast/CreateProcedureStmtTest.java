@@ -205,5 +205,45 @@ class CreateProcedureStmtTest {
         public Object visitExternalTable(ExternalTable externalTable) {
             return null;
         }
+
+        @Override
+        public Object visitExplainStatement(ExplainStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitShowStatement(ShowStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitBeginStatement(BeginStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitCommitStatement(CommitStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitRollbackStatement(RollbackStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitAnalyzeStatement(AnalyzeStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitSetStatement(SetStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitCreateSchemaStatement(CreateSchemaStatement statement) {
+            return null;
+        }
     }
 }

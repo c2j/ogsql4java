@@ -569,6 +569,46 @@ public class MetadataExtractor implements ASTVisitor<Void> {
         }
     }
 
+    @Override
+    public Void visitExplainStatement(ExplainStatement statement) {
+        return null;
+    }
+
+    @Override
+    public Void visitShowStatement(ShowStatement statement) {
+        return null;
+    }
+
+    @Override
+    public Void visitBeginStatement(BeginStatement statement) {
+        return null;
+    }
+
+    @Override
+    public Void visitCommitStatement(CommitStatement statement) {
+        return null;
+    }
+
+    @Override
+    public Void visitRollbackStatement(RollbackStatement statement) {
+        return null;
+    }
+
+    @Override
+    public Void visitAnalyzeStatement(AnalyzeStatement statement) {
+        return null;
+    }
+
+    @Override
+    public Void visitSetStatement(SetStatement statement) {
+        return null;
+    }
+
+    @Override
+    public Void visitCreateSchemaStatement(CreateSchemaStatement statement) {
+        return null;
+    }
+
     /**
      * Creates a summary of extracted metadata.
      * 

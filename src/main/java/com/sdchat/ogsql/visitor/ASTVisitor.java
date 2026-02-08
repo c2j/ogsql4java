@@ -49,4 +49,12 @@ public interface ASTVisitor<T> {
     T visitPartitioningInformation(PartitioningInformation partitioning);
     T visitPartitionDefinition(PartitionDefinition partition);
     T visitExternalTable(ExternalTable externalTable);
+    T visitExplainStatement(ExplainStatement statement);
+    T visitShowStatement(ShowStatement statement);
+    T visitBeginStatement(BeginStatement statement);
+    T visitCommitStatement(CommitStatement statement);
+    T visitRollbackStatement(RollbackStatement statement);
+    T visitAnalyzeStatement(AnalyzeStatement statement);
+    T visitSetStatement(SetStatement statement);
+    T visitCreateSchemaStatement(CreateSchemaStatement statement);
 }
