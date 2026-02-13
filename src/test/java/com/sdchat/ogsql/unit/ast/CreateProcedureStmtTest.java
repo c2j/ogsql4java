@@ -2,6 +2,7 @@ package com.sdchat.ogsql.unit.ast;
 
 import com.sdchat.ogsql.ast.*;
 import com.sdchat.ogsql.visitor.ASTVisitor;
+import com.sdchat.ogsql.visitor.ASTVisitor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
@@ -243,6 +244,36 @@ class CreateProcedureStmtTest {
 
         @Override
         public Object visitCreateSchemaStatement(CreateSchemaStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitSavepointStatement(SavepointStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitReleaseSavepointStatement(ReleaseSavepointStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitRollbackToSavepointStatement(RollbackToSavepointStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Object visitOnConflictClause(OnConflictClause clause) {
+            return null;
+        }
+
+        @Override
+        public Object visitReturningClause(ReturningClause clause) {
+            return null;
+        }
+
+        @Override
+        public Object visitReturningExpression(ReturningExpression expression) {
             return null;
         }
     }

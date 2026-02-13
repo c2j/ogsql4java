@@ -150,6 +150,21 @@ public class MetadataExtractor implements ASTVisitor<Void> {
     }
 
     @Override
+    public Void visitOnConflictClause(OnConflictClause clause) {
+        return null;
+    }
+
+    @Override
+    public Void visitReturningClause(ReturningClause clause) {
+        return null;
+    }
+
+    @Override
+    public Void visitReturningExpression(ReturningExpression expression) {
+        return null;
+    }
+
+    @Override
     public Void visitUpdateStatement(UpdateStatement statement) {
         if (statement == null) return null;
 
@@ -606,6 +621,21 @@ public class MetadataExtractor implements ASTVisitor<Void> {
 
     @Override
     public Void visitCreateSchemaStatement(CreateSchemaStatement statement) {
+        return null;
+    }
+
+    @Override
+    public Void visitSavepointStatement(SavepointStatement statement) {
+        return null;
+    }
+
+    @Override
+    public Void visitReleaseSavepointStatement(ReleaseSavepointStatement statement) {
+        return null;
+    }
+
+    @Override
+    public Void visitRollbackToSavepointStatement(RollbackToSavepointStatement statement) {
         return null;
     }
 

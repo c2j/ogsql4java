@@ -55,6 +55,14 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
             return visitCallstmt(ctx.callstmt());
         } else if (ctx.setstmt() != null) {
             return visitSetstmt(ctx.setstmt());
+        } else if (ctx.savepointstmt() != null) {
+            return visitSavepointstmt(ctx.savepointstmt());
+        } else if (ctx.releasesavepointstmt() != null) {
+            return visitReleasesavepointstmt(ctx.releasesavepointstmt());
+        } else if (ctx.rollbackstmt() != null) {
+            return visitRollbackstmt(ctx.rollbackstmt());
+        } else if (ctx.commitstmt() != null) {
+            return visitCommitstmt(ctx.commitstmt());
         }
         return null;
     }
@@ -266,18 +274,37 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
     @Override
     public SQLStatement visitInsertstmt(OpenGaussSQLParser.InsertstmtContext ctx) {
         InsertStatement stmt = new InsertStatement();
+
+        if (ctx.onConflictClause() != null) {
+            stmt.setOnConflictClause(extractOnConflictClause(ctx.onConflictClause()));
+        }
+
+        if (ctx.insertrest() != null && ctx.insertrest().returningClause() != null) {
+            stmt.setReturningClause(extractReturningClause(ctx.insertrest().returningClause()));
+        }
+
         return stmt;
     }
 
     @Override
     public SQLStatement visitUpdatestmt(OpenGaussSQLParser.UpdatestmtContext ctx) {
         UpdateStatement stmt = new UpdateStatement();
+
+        if (ctx.returningClause() != null) {
+            stmt.setReturningClause(extractReturningClause(ctx.returningClause()));
+        }
+
         return stmt;
     }
 
     @Override
     public SQLStatement visitDeletestmt(OpenGaussSQLParser.DeletestmtContext ctx) {
         DeleteStatement stmt = new DeleteStatement();
+
+        if (ctx.returningClause() != null) {
+            stmt.setReturningClause(extractReturningClause(ctx.returningClause()));
+        }
+
         return stmt;
     }
 
@@ -875,5 +902,137 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
         }
 
         return stmt;
+    }
+
+    @Override
+    public SQLStatement visitSavepointstmt(OpenGaussSQLParser.SavepointstmtContext ctx) {
+        SavepointStatement stmt = new SavepointStatement();
+
+        if (ctx.savepointId() != null) {
+            if (ctx.savepointId().IDENTIFIER() != null) {
+                stmt.setIdentifier(ctx.savepointId().IDENTIFIER().getText());
+            } else if (ctx.savepointId().QIDENT() != null) {
+                stmt.setIdentifier(unquoteIdentifier(ctx.savepointId().QIDENT().getText()));
+            }
+        }
+
+        return stmt;
+    }
+
+    @Override
+    public SQLStatement visitReleasesavepointstmt(OpenGaussSQLParser.ReleasesavepointstmtContext ctx) {
+        ReleaseSavepointStatement stmt = new ReleaseSavepointStatement();
+
+        if (ctx.savepointId() != null) {
+            if (ctx.savepointId().IDENTIFIER() != null) {
+                stmt.setIdentifier(ctx.savepointId().IDENTIFIER().getText());
+            } else if (ctx.savepointId().QIDENT() != null) {
+                stmt.setIdentifier(unquoteIdentifier(ctx.savepointId().QIDENT().getText()));
+            }
+        }
+
+        return stmt;
+    }
+
+    @Override
+    public SQLStatement visitRollbackstmt(OpenGaussSQLParser.RollbackstmtContext ctx) {
+        if (ctx.savepointId() != null) {
+            RollbackToSavepointStatement stmt = new RollbackToSavepointStatement();
+            if (ctx.savepointId().IDENTIFIER() != null) {
+                stmt.setIdentifier(ctx.savepointId().IDENTIFIER().getText());
+            } else if (ctx.savepointId().QIDENT() != null) {
+                stmt.setIdentifier(unquoteIdentifier(ctx.savepointId().QIDENT().getText()));
+            }
+            return stmt;
+        } else {
+            return new RollbackStatement();
+        }
+    }
+
+    @Override
+    public SQLStatement visitCommitstmt(OpenGaussSQLParser.CommitstmtContext ctx) {
+        return new CommitStatement();
+    }
+
+    private String unquoteIdentifier(String quoted) {
+        if (quoted != null && quoted.length() >= 2) {
+            String unquoted = quoted.substring(1, quoted.length() - 1);
+            return unquoted.replace("\"\"", "\"");
+        }
+        return quoted;
+    }
+
+    private OnConflictClause extractOnConflictClause(OpenGaussSQLParser.OnConflictClauseContext ctx) {
+        if (ctx == null) return null;
+
+        OnConflictClause clause = new OnConflictClause();
+
+        if (ctx.conflictTarget() != null) {
+            ConflictTarget target = new ConflictTarget();
+
+            if (ctx.conflictTarget().IDENTIFIER() != null) {
+                target.setConstraintName(ctx.conflictTarget().IDENTIFIER().getText());
+            } else if (ctx.conflictTarget().columnlist() != null) {
+                for (var col : ctx.conflictTarget().columnlist().IDENTIFIER()) {
+                    target.getColumns().add(col.getText());
+                }
+            }
+
+            clause.setConflictTarget(target);
+        }
+
+        if (ctx.conflictAction() != null) {
+            if (ctx.conflictAction().NOTHING() != null) {
+                clause.setConflictAction(ConflictAction.DO_NOTHING);
+            } else if (ctx.conflictAction().UPDATE() != null) {
+                clause.setConflictAction(ConflictAction.DO_UPDATE);
+
+                if (ctx.conflictAction().setclist() != null) {
+                    for (OpenGaussSQLParser.SettargetContext setTarget : ctx.conflictAction().setclist().settarget()) {
+                        if (setTarget.IDENTIFIER() != null && setTarget.aexpr() != null) {
+                            ValueExpression expr = new ValueExpression();
+                            expr.setLiteralValue(setTarget.aexpr().getText());
+                            clause.addUpdateAssignment(setTarget.IDENTIFIER().getText(), expr);
+                        }
+                    }
+                }
+
+                if (ctx.conflictAction().whereclause() != null) {
+                    ValueExpression whereExpr = new ValueExpression();
+                    whereExpr.setLiteralValue(ctx.conflictAction().whereclause().getText());
+                    clause.setWhereClause(whereExpr);
+                }
+            }
+        }
+
+        return clause;
+    }
+
+    private ReturningClause extractReturningClause(OpenGaussSQLParser.ReturningClauseContext ctx) {
+        if (ctx == null) return null;
+
+        ReturningClause clause = new ReturningClause();
+
+        if (ctx.returningExpressionList() != null) {
+            for (var exprCtx : ctx.returningExpressionList().returningExpression()) {
+                ReturningExpression expr = new ReturningExpression();
+
+                if (exprCtx.aexpr() != null) {
+                    expr.setExpression(exprCtx.aexpr().getText());
+                } else if (exprCtx.qualifiedIdentifier() != null) {
+                    expr.setExpression(exprCtx.qualifiedIdentifier().getText());
+                } else if (exprCtx.MULT_OP() != null) {
+                    expr.setExpression("*");
+                }
+
+                if (exprCtx.IDENTIFIER() != null) {
+                    expr.setAlias(exprCtx.IDENTIFIER().getText());
+                }
+
+                clause.addExpression(expr);
+            }
+        }
+
+        return clause;
     }
 }

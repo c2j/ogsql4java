@@ -40,6 +40,10 @@ stmt
     | dropstmt
     | callstmt
     | setstmt
+    | savepointstmt
+    | releasesavepointstmt
+    | rollbackstmt
+    | commitstmt
     ;
 
 // ==================== WITH Clause (Common Table Expressions) ====================
@@ -197,7 +201,7 @@ offsetclause
 // ==================== INSERT Statement ====================
 
 insertstmt
-    : INSERT INTO IDENTIFIER optcolumnList insertrest
+    : INSERT INTO IDENTIFIER optcolumnList insertrest onConflictClause?
     ;
 
 optcolumnList
@@ -210,8 +214,8 @@ columnlist
     ;
 
 insertrest
-    : VALUES inserttargetlist (',' inserttargetlist)*
-    | selectstmt
+    : VALUES inserttargetlist (',' inserttargetlist)* returningClause?
+    | selectstmt returningClause?
     ;
 
 inserttargetlist
@@ -223,10 +227,41 @@ inserttargetel
     | DEFAULT
     ;
 
+onConflictClause
+    : ON CONFLICT conflictTarget? conflictAction
+    ;
+
+conflictTarget
+    : '(' columnlist ')'
+    | ON CONSTRAINT IDENTIFIER
+    |
+    ;
+
+conflictAction
+    : DO NOTHING
+    | DO UPDATE SET setclist whereclause?
+    ;
+
+returningClause
+    : RETURNING returningExpressionList
+    ;
+
+returningExpressionList
+    : returningExpression (',' returningExpression)*
+    ;
+
+returningExpression
+    : qualifiedIdentifier
+    | '*' AS IDENTIFIER
+    | '*'
+    | aexpr AS IDENTIFIER
+    | aexpr
+    ;
+
 // ==================== UPDATE Statement ====================
 
 updatestmt
-    : UPDATE IDENTIFIER optalias SET setclist fromclause whereclause
+    : UPDATE IDENTIFIER optalias SET setclist fromclause whereclause returningClause?
     ;
 
 setclist
@@ -240,7 +275,7 @@ settarget
 // ==================== DELETE Statement ====================
 
 deletestmt
-    : DELETE (FROM)? IDENTIFIER optalias whereclause
+    : DELETE (FROM)? IDENTIFIER optalias whereclause returningClause?
     ;
 
 // ==================== CREATE Statement ====================
@@ -297,6 +332,28 @@ callArg
 
 setstmt
     : SET IDENTIFIER (TO | EQ) aexpr (SEMI)?
+    ;
+
+savepointstmt
+    : SAVEPOINT savepointId (SEMI)?
+    ;
+
+releasesavepointstmt
+    : RELEASE SAVEPOINT? savepointId (SEMI)?
+    ;
+
+rollbackstmt
+    : ROLLBACK WORK? TO SAVEPOINT? savepointId (SEMI)?
+    | ROLLBACK WORK? (SEMI)?
+    ;
+
+savepointId
+    : IDENTIFIER
+    | QIDENT
+    ;
+
+commitstmt
+    : COMMIT WORK? (SEMI)?
     ;
 
 createschemastmt
@@ -663,9 +720,11 @@ INSERT: I N S E R T;
 INTO: I N T O;
 VALUES: V A L U E S;
 DEFAULT: D E F A U L T;
+DO: D O;
 UPDATE: U P D A T E;
 SET: S E T;
 DELETE: D E L E T E;
+RETURNING: R E T U R N I N G;
 CREATE: C R E A T E;
 TABLE: T A B L E;
 PROCEDURE: P R O C E D U R E;
@@ -679,6 +738,7 @@ DEFINER: D E F I N E R;
 CONSTRAINT: C O N S T R A I N T;
 NOT: N O T;
 NULL_P: N U L L;
+NOTHING: N O T H I N G;
 CHECK: C H E C K;
 PRIMARY: P R I M A R Y;
 KEY: K E Y;
@@ -711,7 +771,12 @@ WITH: W I T H;
 RECURSIVE: R E C U R S I V E;
 OR: O R;
 BEGIN: B E G I N;
+COMMIT: C O M M I T;
+ROLLBACK: R O L L B A C K;
 END: E N D;
+SAVEPOINT: S A V E P O I N T;
+RELEASE: R E L E A S E;
+WORK: W O R K;
 NESTLOOP: N E S T L O O P;
 MERGEJOIN: M E R G E J O I N;
 HASHJOIN: H A S H J O I N;
@@ -731,6 +796,7 @@ ON: O N;
 OFF: O F F;
 USING: U S I N G;
 COUNT: C O U N T;
+CONFLICT: C O N F L I C T;
 AVG: A V G;
 SUM: S U M;
 MIN: M I N;
@@ -759,6 +825,10 @@ SEMI: ';';
 // Identifiers and Literals
 IDENTIFIER
     : [a-zA-Z_][a-zA-Z0-9_]*
+    ;
+
+QIDENT
+    : '"' (~'"' | '""')* '"'
     ;
 
 ICONST

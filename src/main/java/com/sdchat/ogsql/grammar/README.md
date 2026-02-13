@@ -1,6 +1,6 @@
 # OpenGauss SQL Grammar
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Based on**: PostgreSQL ANTLR4 grammar from antlr/grammars-v4
 **Extensions**: OpenGauss-specific features (Hints, Partitioning, Foreign Tables)
 
@@ -23,6 +23,56 @@ The grammar defines SQL statement types:
 - **CREATE**: CREATE TABLE with columns, constraints, partitioning
 - **DROP**: DROP TABLE/INDEX statements
 - **ALTER**: ALTER TABLE statements
+
+### Transaction Control
+
+Support for transaction management:
+
+- **SAVEPOINT**: Establish a savepoint within a transaction
+  ```sql
+  SAVEPOINT my_savepoint;
+  ```
+
+- **RELEASE SAVEPOINT**: Destroy a savepoint
+  ```sql
+  RELEASE SAVEPOINT my_savepoint;
+  ```
+
+- **ROLLBACK TO SAVEPOINT**: Roll back to a savepoint
+  ```sql
+  ROLLBACK TO SAVEPOINT my_savepoint;
+  ```
+
+- **COMMIT** / **ROLLBACK**: Transaction control statements
+
+### Advanced INSERT Features
+
+#### ON CONFLICT (Upsert)
+
+INSERT statements support ON CONFLICT clause for handling conflicts:
+
+```sql
+-- DO NOTHING: Skip the insert on conflict
+INSERT INTO users (id, name) VALUES (1, 'John') ON CONFLICT (id) DO NOTHING;
+
+-- DO UPDATE: Update conflicting rows
+INSERT INTO users (id, name) VALUES (1, 'John') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
+```
+
+#### RETURNING Clause
+
+INSERT, UPDATE, and DELETE statements support RETURNING clause:
+
+```sql
+-- INSERT with RETURNING
+INSERT INTO users (name) VALUES ('John') RETURNING id, name;
+
+-- UPDATE with RETURNING
+UPDATE users SET name = 'Jane' WHERE id = 1 RETURNING id, name;
+
+-- DELETE with RETURNING
+DELETE FROM users WHERE id = 1 RETURNING id;
+```
 
 ### Lexer Rules
 
@@ -100,7 +150,7 @@ After running `mvn generate-sources`, files are generated to:
 target/generated-sources/antlr4/
 ```
 
-The generated Java files include the package declaration `com.sdchat.ogsql.grammar`.
+The generated Java files include package declaration `com.sdchat.ogsql.grammar`.
 
 ## Usage
 
@@ -132,9 +182,9 @@ public class SQLVisitor extends OpenGaussSQLBaseVisitor<String> {
 }
 ```
 
-### Grammar-First Development
+## Grammar-First Development
 
-This grammar is the authoritative contract for SQL parsing. Any changes to supported SQL syntax must be made here first.
+This grammar is an authoritative contract for SQL parsing. Any changes to supported SQL syntax must be made here first.
 
 ## Versioning
 
@@ -143,24 +193,38 @@ Grammar versioning follows semantic versioning:
 - **MINOR**: New rules or features added
 - **PATCH**: Bug fixes or clarifications
 
-Current version: **1.0.0** (MVP subset of full OpenGauss SQL)
+Current version: **1.1.0** (MVP subset of full OpenGauss SQL)
 
-## References
-
-- PostgreSQL Grammar: https://github.com/antlr/grammars-v4/tree/master/sql/postgresql
-- OpenGauss SQL Reference: https://opengauss.org/zh/docs/
-- ANTLR4 Documentation: https://www.antlr.org/
-
-## Limitations (MVP)
+## Limitations
 
 Current grammar supports MVP subset of OpenGauss SQL:
-- Basic SELECT, INSERT, UPDATE, DELETE, CREATE TABLE
-- Simple joins (no complex nested subqueries)
-- Basic hints (NestLoop, MergeJoin, HashJoin)
-- Simple partitioning (RANGE, LIST, HASH)
-- Foreign table creation
 
-Future versions will expand to full OpenGauss SQL grammar.
+### Transaction Control
+- Only supports SAVEPOINT, RELEASE, and ROLLBACK TO SAVEPOINT
+- Does not support PREPARE TRANSACTION / COMMIT PREPARED / ROLLBACK PREPARED
+
+### INSERT ON CONFLICT
+- Supports basic ON CONFLICT DO NOTHING and DO UPDATE with SET clause
+- Supports conflict targets: column lists and constraint names
+- Limitation: DO UPDATE does not fully support all SET clause features (e.g., complex expressions)
+- Limitation: WHERE clause parsing is simplified (stored as literal string)
+
+### RETURNING Clause
+- Supports basic RETURNING with columns, expressions, and wildcard (*)
+- Supports optional aliases: `expression AS alias`
+- Limitation: Complex expressions (e.g., nested subqueries) not fully parsed
+- Limitation: Expression validation is not performed (only basic syntax parsing)
+
+### General Limitations
+- No stored procedure body parsing (only CREATE PROCEDURE syntax)
+- No cursor operations (DECLARE, FETCH, MOVE, CLOSE)
+- No COPY statements for bulk import/export
+- No CREATE TYPE / CREATE DOMAIN
+- No CREATE / ALTER INDEX
+- No GRANT / REVOKE statements
+- No window functions or WINDOW clause
+- No LATERAL subqueries
+- No VACUUM / ANALYZE / CLUSTER maintenance statements
 
 ## Notes
 

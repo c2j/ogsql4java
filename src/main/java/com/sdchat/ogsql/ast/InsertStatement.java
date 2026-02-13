@@ -9,6 +9,8 @@ public class InsertStatement implements SQLStatement {
     private String tableName;
     private List<String> columns;
     private List<ValueExpression> values;
+    private OnConflictClause onConflictClause;
+    private ReturningClause returningClause;
 
     public InsertStatement() {
     }
@@ -45,6 +47,30 @@ public class InsertStatement implements SQLStatement {
 
     public void setValues(List<ValueExpression> values) {
         this.values = values;
+    }
+
+    public OnConflictClause getOnConflictClause() {
+        return onConflictClause;
+    }
+
+    public void setOnConflictClause(OnConflictClause onConflictClause) {
+        this.onConflictClause = onConflictClause;
+    }
+
+    public boolean hasOnConflictClause() {
+        return onConflictClause != null;
+    }
+
+    public ReturningClause getReturningClause() {
+        return returningClause;
+    }
+
+    public void setReturningClause(ReturningClause returningClause) {
+        this.returningClause = returningClause;
+    }
+
+    public boolean hasReturningClause() {
+        return returningClause != null;
     }
 
     @Override

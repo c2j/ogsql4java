@@ -24,7 +24,10 @@ public interface ASTVisitor<T> {
     T visitCreateProcedureStmt(CreateProcedureStmt statement);
     
     T visitInsertStatement(InsertStatement statement);
+    T visitOnConflictClause(OnConflictClause clause);
     T visitUpdateStatement(UpdateStatement statement);
+    T visitReturningClause(ReturningClause clause);
+    T visitReturningExpression(ReturningExpression expression);
     T visitDeleteStatement(DeleteStatement statement);
     T visitAlterStatement(AlterStatement statement);
     
@@ -54,6 +57,9 @@ public interface ASTVisitor<T> {
     T visitBeginStatement(BeginStatement statement);
     T visitCommitStatement(CommitStatement statement);
     T visitRollbackStatement(RollbackStatement statement);
+    T visitSavepointStatement(SavepointStatement statement);
+    T visitReleaseSavepointStatement(ReleaseSavepointStatement statement);
+    T visitRollbackToSavepointStatement(RollbackToSavepointStatement statement);
     T visitAnalyzeStatement(AnalyzeStatement statement);
     T visitSetStatement(SetStatement statement);
     T visitCreateSchemaStatement(CreateSchemaStatement statement);

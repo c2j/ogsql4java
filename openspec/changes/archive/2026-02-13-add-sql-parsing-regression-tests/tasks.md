@@ -52,7 +52,7 @@
 - [x] 6.2 Add @Tag("slow") annotation for optional slow test categorization
 - [x] 6.3 Create configuration file to exclude directories if needed (e.g., wastebin)
 - [x] 6.4 Implement optional file pattern filtering logic
-- [ ] 6.5 Add test to verify tags work correctly with Maven Surefire plugin
+- [x] 6.5 Add test to verify tags work correctly with Maven Surefire plugin
 
 ## 7. Integration Testing
 
@@ -86,13 +86,14 @@
 
 ## Implementation Summary
 
-**Status**: ✅ All required tasks completed (28/28 tasks)
+**Status**: ✅ All required tasks completed (51/51 required tasks)
 **Optional enhancements**: 0/6 tasks (future work)
 
 ### Files Created
 - `src/test/java/com/sdchat/ogsql/regression/SQLTestFileDiscovery.java` (190 lines)
 - `src/test/java/com/sdchat/ogsql/regression/SQLTestFileDiscoveryTest.java` (54 lines)
 - `src/test/java/com/sdchat/ogsql/regression/SQLParsingRegressionTest.java` (246 lines)
+- `src/test/java/com/sdchat/ogsql/regression/TagVerificationTest.java` (36 lines)
 - `src/test/java/com/sdchat/ogsql/regression/README.md` (157 lines)
 - `src/test/resources/regression/test-config.properties` (17 lines)
 

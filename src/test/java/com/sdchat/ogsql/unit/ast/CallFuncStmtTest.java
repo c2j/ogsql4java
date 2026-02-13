@@ -13,6 +13,12 @@ import com.sdchat.ogsql.ast.RollbackStatement;
 import com.sdchat.ogsql.ast.AnalyzeStatement;
 import com.sdchat.ogsql.ast.SetStatement;
 import com.sdchat.ogsql.ast.CreateSchemaStatement;
+import com.sdchat.ogsql.ast.SavepointStatement;
+import com.sdchat.ogsql.ast.ReleaseSavepointStatement;
+import com.sdchat.ogsql.ast.RollbackToSavepointStatement;
+import com.sdchat.ogsql.ast.OnConflictClause;
+import com.sdchat.ogsql.ast.ReturningClause;
+import com.sdchat.ogsql.ast.ReturningExpression;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -311,6 +317,36 @@ public class CallFuncStmtTest {
 
         @Override
         public Void visitCreateSchemaStatement(CreateSchemaStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitSavepointStatement(SavepointStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitReleaseSavepointStatement(ReleaseSavepointStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitRollbackToSavepointStatement(RollbackToSavepointStatement statement) {
+            return null;
+        }
+
+        @Override
+        public Void visitOnConflictClause(OnConflictClause clause) {
+            return null;
+        }
+
+        @Override
+        public Void visitReturningClause(ReturningClause clause) {
+            return null;
+        }
+
+        @Override
+        public Void visitReturningExpression(ReturningExpression expression) {
             return null;
         }
     }

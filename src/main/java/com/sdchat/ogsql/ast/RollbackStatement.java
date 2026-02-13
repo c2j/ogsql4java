@@ -3,8 +3,9 @@ package com.sdchat.ogsql.ast;
 import com.sdchat.ogsql.visitor.ASTVisitor;
 
 /**
- * Represents a ROLLBACK statement.
+ * Represents a ROLLBACK statement (without TO SAVEPOINT).
  * Example: ROLLBACK;
+ * Example: ROLLBACK WORK;
  */
 public class RollbackStatement implements SQLStatement {
 

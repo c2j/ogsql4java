@@ -5,6 +5,7 @@ import com.sdchat.ogsql.visitor.ASTVisitor;
 /**
  * Represents a COMMIT statement.
  * Example: COMMIT;
+ * Example: COMMIT WORK;
  */
 public class CommitStatement implements SQLStatement {
 

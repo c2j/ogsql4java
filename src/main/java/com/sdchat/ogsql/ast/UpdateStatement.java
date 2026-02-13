@@ -12,6 +12,7 @@ public class UpdateStatement implements SQLStatement {
     private String tableName;
     private Map<String, ValueExpression> setClauses;
     private ValueExpression whereClause;
+    private ReturningClause returningClause;
 
     public UpdateStatement() {
         this.setClauses = new HashMap<>();
@@ -54,6 +55,18 @@ public class UpdateStatement implements SQLStatement {
 
     public void setWhereClause(ValueExpression whereClause) {
         this.whereClause = whereClause;
+    }
+
+    public ReturningClause getReturningClause() {
+        return returningClause;
+    }
+
+    public void setReturningClause(ReturningClause returningClause) {
+        this.returningClause = returningClause;
+    }
+
+    public boolean hasReturningClause() {
+        return returningClause != null;
     }
 
     @Override

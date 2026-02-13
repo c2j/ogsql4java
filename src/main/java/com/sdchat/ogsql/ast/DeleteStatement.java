@@ -6,6 +6,7 @@ public class DeleteStatement implements SQLStatement {
 
     private String tableName;
     private ValueExpression whereClause;
+    private ReturningClause returningClause;
 
     public DeleteStatement() {
     }
@@ -33,6 +34,18 @@ public class DeleteStatement implements SQLStatement {
 
     public void setWhereClause(ValueExpression whereClause) {
         this.whereClause = whereClause;
+    }
+
+    public ReturningClause getReturningClause() {
+        return returningClause;
+    }
+
+    public void setReturningClause(ReturningClause returningClause) {
+        this.returningClause = returningClause;
+    }
+
+    public boolean hasReturningClause() {
+        return returningClause != null;
     }
 
     @Override

@@ -221,6 +221,24 @@ public class TableRelationshipExtractor implements ASTVisitor<TableRelationshipG
     }
 
     @Override
+    public TableRelationshipGraph visitOnConflictClause(OnConflictClause clause) {
+        LOGGER.fine("ON CONFLICT clause not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitReturningClause(ReturningClause clause) {
+        LOGGER.fine("RETURNING clause not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitReturningExpression(ReturningExpression expression) {
+        LOGGER.fine("RETURNING expression not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
     public TableRelationshipGraph visitUpdateStatement(UpdateStatement statement) {
         LOGGER.fine("UPDATE statement not supported for relationship extraction");
         return graph;
@@ -316,6 +334,24 @@ public class TableRelationshipExtractor implements ASTVisitor<TableRelationshipG
     @Override
     public TableRelationshipGraph visitCreateSchemaStatement(CreateSchemaStatement statement) {
         LOGGER.fine("CREATE SCHEMA statement not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitSavepointStatement(SavepointStatement statement) {
+        LOGGER.fine("SAVEPOINT statement not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitReleaseSavepointStatement(ReleaseSavepointStatement statement) {
+        LOGGER.fine("RELEASE SAVEPOINT statement not supported for relationship extraction");
+        return graph;
+    }
+
+    @Override
+    public TableRelationshipGraph visitRollbackToSavepointStatement(RollbackToSavepointStatement statement) {
+        LOGGER.fine("ROLLBACK TO SAVEPOINT statement not supported for relationship extraction");
         return graph;
     }
 }
