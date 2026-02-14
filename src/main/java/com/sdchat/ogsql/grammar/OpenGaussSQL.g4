@@ -35,15 +35,31 @@ stmt
     | createstmt
     | createschemastmt
     | createprocedurestmt
+    | createfunctionstmt
+    | createsequencestmt
+    | createindexstmt
+    | createtypestmt
+    | createpackagestmt
+    | createuserstmt
+    | createdbstmt
+    | createForeignTableStmt
     | alterprocedurestmt
     | alterstmt
     | dropstmt
+    | dropdatabasestmt
     | callstmt
     | setstmt
     | savepointstmt
     | releasesavepointstmt
     | rollbackstmt
     | commitstmt
+    | showstmt
+    | explainstmt
+    | analyzestmt
+    | truncatestmt
+    | startTransactionstmt
+    | cursorstmt
+    | fetchstmt
     ;
 
 // ==================== WITH Clause (Common Table Expressions) ====================
@@ -61,6 +77,9 @@ commonTableExpr
 
 selectstmt
     : withClause? SELECT hintComment? optdistinct selectlist fromclause whereclause groupbyclause havingclause orderbyclause limitclause
+    | selectstmt UNION (ALL | DISTINCT)? selectstmt
+    | selectstmt EXCEPT (ALL | DISTINCT)? selectstmt
+    | selectstmt INTERSECT (ALL | DISTINCT)? selectstmt
     ;
 
 hintComment
@@ -206,6 +225,7 @@ insertstmt
 
 optcolumnList
     : '(' columnlist ')'
+    | '(' selectstmt ')'
     |
     ;
 
@@ -229,6 +249,7 @@ inserttargetel
 
 onConflictClause
     : ON CONFLICT conflictTarget? conflictAction
+    | ON DUPLICATE KEY UPDATE setclist
     ;
 
 conflictTarget
@@ -270,6 +291,7 @@ setclist
 
 settarget
     : IDENTIFIER '=' aexpr
+    | IDENTIFIER '.' IDENTIFIER '=' aexpr
     ;
 
 // ==================== DELETE Statement ====================
@@ -281,8 +303,24 @@ deletestmt
 // ==================== CREATE Statement ====================
 
 createstmt
-    : CREATE TABLE IDENTIFIER '(' opttableelementlist ')' optPartitionBy
+    : CREATE TABLE IDENTIFIER '(' opttableelementlist ')' optPartitionBy optDistributeBy optWithClause
     | createForeignTableStmt
+    ;
+
+optWithClause
+    : WITH '(' tableWithOption (',' tableWithOption)* ')'
+    |
+    ;
+
+tableWithOption
+    : IDENTIFIER '=' (IDENTIFIER | ICONST | SCONST)
+    | IDENTIFIER
+    ;
+
+optDistributeBy
+    : DISTRIBUTE BY (HASH | REPLICATE) '(' columnlist ')'
+    | DISTRIBUTE BY (HASH | REPLICATE) '(' columnlist ')' optPartitionBy
+    |
     ;
 
 // ==================== CREATE PROCEDURE Statement ====================
@@ -356,6 +394,46 @@ commitstmt
     : COMMIT WORK? (SEMI)?
     ;
 
+startTransactionstmt
+    : START TRANSACTION transactionModeList?
+    | BEGIN (transactionModeList)?
+    ;
+
+transactionModeList
+    : transactionMode (',' transactionMode)*
+    ;
+
+transactionMode
+    : ISOLATION LEVEL isolationLevel
+    | READ ONLY
+    | READ WRITE
+    | NOT? DEFERRABLE
+    ;
+
+isolationLevel
+    : READ UNCOMMITTED
+    | READ COMMITTED
+    | REPEATABLE READ
+    | SERIALIZABLE
+    ;
+
+cursorstmt
+    : CURSOR IDENTIFIER (SCROLL | NO SCROLL)? FOR selectstmt
+    ;
+
+fetchstmt
+    : FETCH (NEXT | PRIOR | FIRST | LAST | (IDENTIFIER | ALL | FORWARD | BACKWARD) (INT | ALL)?) FROM? IDENTIFIER
+    ;
+
+showstmt
+    : SHOW (ALL | IDENTIFIER)
+    ;
+
+explainstmt
+    : EXPLAIN ((ANALYZE | VERBOSE | COSTS | BUFFERS | TIMING | FORMAT IDENTIFIER) (',' (ANALYZE | VERBOSE | COSTS | BUFFERS | TIMING | FORMAT IDENTIFIER))*)?
+      (selectstmt | insertstmt | updatestmt | deletestmt | callstmt)
+    ;
+
 createschemastmt
     : CREATE SCHEMA IDENTIFIER (SEMI)?
     ;
@@ -399,6 +477,12 @@ typename
     : IDENTIFIER
     | IDENTIFIER '(' ICONST ')'
     | IDENTIFIER '(' ICONST ',' ICONST ')'
+    | SERIAL
+    | BIGSERIAL
+    | SMALLSERIAL
+    | SERIAL '(' ICONST ')'
+    | BIGSERIAL '(' ICONST ')'
+    | SMALLSERIAL '(' ICONST ')'
     ;
 
 colquallist
@@ -471,6 +555,7 @@ subpartitionDefElement
 
 partitionBoundSpec
     : IN '(' exprList ')'
+    | LESS THAN '(' exprList ')'
     | '(' exprList ')'
     ;
 
@@ -481,8 +566,84 @@ exprList
 // ==================== DROP Statement ====================
 
 dropstmt
-    : DROP TABLE IDENTIFIER (IF EXISTS)?
+    : DROP TABLE (IF EXISTS)? IDENTIFIER (CASCADE | RESTRICT)?
     | DROP PROCEDURE (IF EXISTS)? IDENTIFIER (CASCADE | RESTRICT)?
+    | DROP SCHEMA (IF EXISTS)? IDENTIFIER (CASCADE | RESTRICT)?
+    | DROP INDEX (IF EXISTS)? IDENTIFIER
+    | DROP TYPE (IF EXISTS)? IDENTIFIER
+    ;
+
+dropdatabasestmt
+    : DROP DATABASE (IF EXISTS)? IDENTIFIER
+    ;
+
+// ==================== CREATE INDEX Statement ====================
+
+createindexstmt
+    : CREATE (UNIQUE)? INDEX (IF NOT EXISTS)? IDENTIFIER ON IDENTIFIER '(' indexcolumnlist ')'
+    ;
+
+indexcolumnlist
+    : IDENTIFIER (',' IDENTIFIER)*
+    ;
+
+// ==================== CREATE TYPE Statement ====================
+
+createtypestmt
+    : CREATE TYPE IDENTIFIER
+    ;
+
+// ==================== CREATE FUNCTION Statement ====================
+
+createfunctionstmt
+    : CREATE (OR REPLACE)? FUNCTION IDENTIFIER '(' ')' RETURNS typename LANGUAGE IDENTIFIER
+    ;
+
+// ==================== CREATE PACKAGE Statement ====================
+
+createpackagestmt
+    : CREATE (OR REPLACE)? PACKAGE IDENTIFIER
+    ;
+
+// ==================== CREATE SEQUENCE Statement ====================
+
+createsequencestmt
+    : CREATE SEQUENCE IDENTIFIER
+    ;
+
+// ==================== CREATE USER Statement ====================
+
+createuserstmt
+    : CREATE USER IDENTIFIER (WITH useroptions)*
+    ;
+
+// ==================== CREATE DATABASE Statement ====================
+
+createdbstmt
+    : CREATE DATABASE IDENTIFIER (WITH dboption)*
+    ;
+
+dboption
+    : ENCODING EQ IDENTIFIER
+    | ENCODING EQ SCONST
+    | DBCOMPATIBILITY EQ IDENTIFIER
+    ;
+
+useroptions
+    : IDENTIFIER
+    | IDENTIFIER EQ IDENTIFIER
+    ;
+
+// ==================== ANALYZE Statement ====================
+
+analyzestmt
+    : ANALYZE (IDENTIFIER)?
+    ;
+
+// ==================== TRUNCATE Statement ====================
+
+truncatestmt
+    : TRUNCATE (TABLE)? IDENTIFIER
     ;
 
 // ==================== ALTER Statement ====================
@@ -802,7 +963,112 @@ SUM: S U M;
 MIN: M I N;
 MAX: M A X;
 CALL: C A L L;
+SHOW: S H O W;
+EXPLAIN: E X P L A I N;
+ANALYZE: A N A L Y Z E;
+THEN: T H E N;
+ELSE: E L S E;
+ELSIF: E L S I F;
+END_IF: E N D IF;
+DISTRIBUTE: D I S T R I B U T E;
+REPLICATE: R E P L I C A T E;
+LESS: L E S S;
+THAN: T H A N;
+MAXVALUE: M A X V A L U E;
 ARROW: '=' '>';
+DUPLICATE: D U P L I C A T E;
+TRANSACTION: T R A N S A C T I O N;
+SCROLL: S C R O L L;
+CURSOR: C U R S O R;
+UNION: U N I O N;
+EXCEPT: E X C E P T;
+REFERENCES: R E F E R E N C E;
+INDEX: I N D E X;
+SERIAL: S E R I A L;
+BIGSERIAL: B I G S E R I A L;
+SMALLSERIAL: S M A L L S E R I A L;
+IDENTITY: I D E N T I T Y;
+GENERATED: G E N E R A T E D;
+ALWAYS: A L W A Y S;
+SEQUENCE: S E Q U E N C E;
+CYCLE: C Y C L E;
+NO: N O;
+NEXT: N E X T;
+ROWS: R O W S;
+PERCENT: P E R C E N T;
+WITHIN: W I T H I N;
+GROUPING: G R O U P I N G;
+CUBE: C U B E;
+ROLLUP: R O L L U P;
+FILTER: F I L T E R;
+OVER: O V E R;
+WINDOW: W I N D O W;
+RESPECT: R E S P E C T;
+NULLS_ORDER: N U L L S ORDER;
+TIES: T I E S;
+MEDIAN: M E D I A N;
+ORIENTATION: O R I E N T A T I O N;
+ROW: R O W;
+DEFERRABLE: D E F F E R R A B L E;
+ISOLATION: I S O L A T I O N;
+LEVEL: L E V E L;
+READ: R E A D;
+WRITE: W R I T E;
+PRIOR: P R I O R;
+FORWARD: F O R W A R D;
+BACKWARD: B A C K W A R D;
+COMMITTED: C O M M I T T E D;
+UNCOMMITTED: U N C O M M I T T E D;
+SERIALIZABLE: S E R I A L I Z A B L E;
+STORAGE: S T O R A G E;
+CACHING: C A C H I N G;
+DELIMITER: D E L I M I T E R;
+HEADER: H E A D E R;
+FREEZE: F R E E Z E;
+LOGGED: L O G G E D;
+UNLOGGED: U N L O G G E D;
+INHERIT: I N H E R I T;
+INHERITS: I N H E R I T S;
+TABLESPACE: T A B L E S P A C E;
+BINARY: B I N A R Y;
+WITHOUT: W I T H O U T;
+TRUNCATE: T R U N C A T E;
+TRIGGER: T R I G G E R;
+VOLATILE: V O L A T I L E;
+STABLE: S T A B L E;
+IMMUTABLE: I M M U T A B L E;
+STRICT: S T R I C T;
+PARALLEL: P A R A L L E L;
+SAFE: S A F E;
+UNSAFE: U N S A F E;
+COST: C O S T;
+SUPPORT: S U P P O R T;
+BEFORE: B E F O R E;
+AFTER: A F T E R;
+INSTEAD: I N S T E A D;
+EACH: E A C H;
+STATEMENT: S T A T E M E N T;
+EXECUTE: E X E C U T E;
+VERBOSE: V E R B O S E;
+COSTS: C O S T S;
+BUFFERS: B U F F E R S;
+GENERIC_PLAN: G E N E R I C P L A N;
+ENCODING: E N C O D I N G;
+TEMPORARY: T E M P O R A R Y;
+TEMP: T E M P;
+LOCAL: L O C A L;
+MODIFY: M O D I F Y;
+AUTOINCREMENT: A U T O I N C R E M E N T;
+INITIALLY: I N I T I A L L Y;
+DEFERRED: D E F E R R E D;
+START: S T A R T;
+COLLATE: C O L L A T E;
+STORED: S T O R E D;
+USER: U S E R;
+DATABASE: D A T A B A S E;
+OBJECT: O B J E C T;
+DBCOMPATIBILITY: D B C O M P A T I B I L I T Y;
+PACKAGE: P A C K A G E;
 
 // Operators
 EQ: '=';

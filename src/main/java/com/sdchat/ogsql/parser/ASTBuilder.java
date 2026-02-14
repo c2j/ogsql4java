@@ -747,14 +747,16 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
             language = ctx.LANGUAGE(1).getText();
         }
 
-         if (ctx.procedureBody().dolString() != null) {
-            ProcedureBody body = new ProcedureBody(language, ctx.procedureBody().dolString().getText());
-            stmt.setBody(body);
-         } else if (ctx.procedureBody().BEGIN() != null) {
-            String procLanguage = ctx.LANGUAGE() != null && ctx.LANGUAGE().size() > 0 ? ctx.LANGUAGE(0).getText() : "plpgsql";
-            ProcedureBody body = new ProcedureBody(procLanguage, ctx.procedureBody().BEGIN().getText() + " " + ctx.procedureBody().END().getText());
-            stmt.setBody(body);
-        }
+         if (ctx.procedureBody() != null) {
+             if (ctx.procedureBody().dolString() != null) {
+                ProcedureBody body = new ProcedureBody(language, ctx.procedureBody().dolString().getText());
+                stmt.setBody(body);
+             } else if (ctx.procedureBody().BEGIN() != null) {
+                String procLanguage = ctx.LANGUAGE() != null && ctx.LANGUAGE().size() > 0 ? ctx.LANGUAGE(0).getText() : "plpgsql";
+                ProcedureBody body = new ProcedureBody(procLanguage, ctx.procedureBody().BEGIN().getText() + " " + ctx.procedureBody().END().getText());
+                stmt.setBody(body);
+             }
+         }
 
         if (ctx.SECURITY() != null && ctx.DEFINER() != null) {
             ProcedureSecurity security = new ProcedureSecurity();
@@ -989,10 +991,18 @@ public class ASTBuilder extends OpenGaussSQLBaseVisitor<SQLStatement> {
 
                 if (ctx.conflictAction().setclist() != null) {
                     for (OpenGaussSQLParser.SettargetContext setTarget : ctx.conflictAction().setclist().settarget()) {
-                        if (setTarget.IDENTIFIER() != null && setTarget.aexpr() != null) {
+                        String colName;
+                        if (setTarget.IDENTIFIER().size() == 1) {
+                            colName = setTarget.IDENTIFIER(0).getText();
+                        } else if (setTarget.IDENTIFIER().size() == 2) {
+                            colName = setTarget.IDENTIFIER(0).getText() + "." + setTarget.IDENTIFIER(1).getText();
+                        } else {
+                            continue;
+                        }
+                        if (setTarget.aexpr() != null) {
                             ValueExpression expr = new ValueExpression();
                             expr.setLiteralValue(setTarget.aexpr().getText());
-                            clause.addUpdateAssignment(setTarget.IDENTIFIER().getText(), expr);
+                            clause.addUpdateAssignment(colName, expr);
                         }
                     }
                 }
